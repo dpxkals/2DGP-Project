@@ -18,13 +18,13 @@ def handle_events():
         elif event.type == SDL_KEYDOWN:
             if event.key == SDLK_d:
                 print('D키를 눌렀습니다.')
-                world[0].set_walking(True)
+                world[0].is_walking = True
             elif event.key == SDLK_ESCAPE:
                 running = False
         elif event.type == SDL_KEYUP:
             if event.key == SDLK_d:
                 print('D키를 뗐습니다.')
-                world[0].set_walking(False)
+                world[0].is_walking = False
 
 open_canvas(1920, 1080)
 
