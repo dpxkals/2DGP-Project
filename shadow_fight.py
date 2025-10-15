@@ -52,7 +52,10 @@ def handle_events():
         if event.type == SDL_QUIT:
             running = False
         elif event.type == SDL_KEYDOWN:
-            if event.key == SDLK_ESCAPE:
+            if event.key == SDLK_d:
+                print('D키를 눌렀습니다.')
+                world[0].set_walking(True)
+            elif event.key == SDLK_ESCAPE:
                 running = False
 
 open_canvas(1920, 1080)
