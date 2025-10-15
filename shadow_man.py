@@ -1,5 +1,21 @@
 from pico2d import load_image
 
+class IDLE:
+    def __init__(self, shadowman):
+        pass
+
+    def enter(self):
+        pass
+
+    def exit(self):
+        pass
+
+    def do(self):
+        pass
+
+    def draw(self):
+        pass
+
 
 class ShadowMan:
     def __init__(self):
