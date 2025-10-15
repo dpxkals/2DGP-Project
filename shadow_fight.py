@@ -57,6 +57,10 @@ def handle_events():
                 world[0].set_walking(True)
             elif event.key == SDLK_ESCAPE:
                 running = False
+        elif event.type == SDL_KEYUP:
+            if event.key == SDLK_d:
+                print('D키를 뗐습니다.')
+                world[0].set_walking(False)
 
 open_canvas(1920, 1080)
 
