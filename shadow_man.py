@@ -19,6 +19,11 @@ class Idle:
         pass
 
     def draw(self):
+        sprite_w, sprite_h = self.shadowman.current_sprite_size
+        self.shadowman.current_image.clip_draw(
+            self.shadowman.current_frame * sprite_w, 0, sprite_w, sprite_h,
+            self.shadowman.x, self.shadowman.y, 400, 400
+        )
         pass
 
 
@@ -55,8 +60,4 @@ class ShadowMan:
         self.state_machine.update()
 
     def draw(self):
-        sprite_w, sprite_h = self.current_sprite_size
-        self.current_image.clip_draw(
-            self.current_frame * sprite_w, 0, sprite_w, sprite_h,
-            self.x, self.y, 400, 400
-        )
+        self.state_machine.draw()
