@@ -1,6 +1,7 @@
 from pico2d import *
 
 from shadow_man import ShadowMan
+from short_sword import short_sword
 
 
 # Game object class here
@@ -8,6 +9,16 @@ from shadow_man import ShadowMan
 # 2. 속성을 도출 - 추상화
 # 3. 행위를 도출
 # 4. 클래스를 제작
+
+class background:
+    def __init__(self):
+        self.image = load_image('backGround.png')
+
+    def update(self):
+        pass
+
+    def draw(self):
+        self.image.draw(960,540,1920,1080)
 
 def handle_events():
     global running
@@ -18,13 +29,13 @@ def handle_events():
         elif event.type == SDL_KEYDOWN:
             if event.key == SDLK_d:
                 print('D키를 눌렀습니다.')
-                world[0].is_walking = True
+                world[1].is_walking = True
             elif event.key == SDLK_ESCAPE:
                 running = False
         elif event.type == SDL_KEYUP:
             if event.key == SDLK_d:
                 print('D키를 뗐습니다.')
-                world[0].is_walking = False
+                world[1].is_walking = False
 
 open_canvas(1920, 1080)
 
@@ -37,8 +48,16 @@ def reset_world():
     world = [] # 빈 월드
 
     # 객체들을 생성
+    bg = background()
+    world.append(bg)
+
     shadow_man = ShadowMan()
     world.append(shadow_man)
+
+    sword = short_sword()
+    world.append(sword)
+
+
 
 reset_world()
 
@@ -58,6 +77,6 @@ while running:
     handle_events()
     update_world() # 객체들의 상호작용을 시뮬레이션, 계산
     render_world() # 객체들의 모습을 그린다
-    delay(0.05)
+    delay(0.1)
 
 close_canvas()
