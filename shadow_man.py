@@ -1,7 +1,9 @@
 from pico2d import load_image
+from state_machine import StateMachine
 
 class IDLE:
-    def __init__(self, shadowman):
+    def __init__(self, shadowMan):
+        self.shadowman = shadowman
         pass
 
     def enter(self):
@@ -31,6 +33,9 @@ class ShadowMan:
         self.current_sprite_size = self.idle_sprite_size
         self.frame = self.frame_idle
         self.current_frame = 0
+
+        self.IDLE = Idle(self)
+        self.state_machine = StateMachine(self.IDLE)  # 상태머신 생성 및 초기 시작 상태 설정
 
     def set_walking(self, walking):
         self.is_walking = walking
