@@ -1,8 +1,8 @@
 from pico2d import load_image
 from state_machine import StateMachine
 
-class IDLE:
-    def __init__(self, shadowMan):
+class Idle:
+    def __init__(self, shadowman):
         self.shadowman = shadowman
         pass
 
@@ -13,6 +13,9 @@ class IDLE:
         pass
 
     def do(self):
+        self.shadowman.current_frame = (self.shadowman.current_frame + 1) % self.shadowman.frame
+        if self.shadowman.is_walking:
+            self.shadowman.x += 10
         pass
 
     def draw(self):
@@ -49,9 +52,7 @@ class ShadowMan:
             self.frame = self.frame_idle
 
     def update(self):
-        self.current_frame = (self.current_frame + 1) % self.frame
-        if self.is_walking:
-            self.x += 10
+        self.state_machine.update()
 
     def draw(self):
         sprite_w, sprite_h = self.current_sprite_size
