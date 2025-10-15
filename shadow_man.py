@@ -31,16 +31,16 @@ class Idle:
         sprite_w, sprite_h = self.shadowman.current_sprite_size
         self.shadowman.current_image.clip_draw(
             self.shadowman.current_frame * sprite_w, 0, sprite_w, sprite_h,
-            self.shadowman.x, self.shadowman.y, 400, 400
+            self.shadowman.x, self.shadowman.y, 300, 300
         )
         pass
 
 
 class ShadowMan:
     def __init__(self):
-        self.x, self.y = 200, 200
+        self.x, self.y = 200, 300
         self.is_walking = False
-        self.idle_image = load_image('그림자검객_idlePNG.png')
+        self.idle_image = load_image('그림자검객_idle.png')
         self.walk_image = load_image('그림자검객_walk.png')
         self.idle_sprite_size = (340, 360)
         self.walk_sprite_size = (227, 260)
