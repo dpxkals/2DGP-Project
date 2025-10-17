@@ -1,7 +1,7 @@
 from pico2d import *
 
 from shadow_man import ShadowMan
-#from short_sword import short_sword
+from short_sword import short_sword
 
 
 # Game object class here
@@ -50,8 +50,8 @@ def reset_world():
     shadow_man = ShadowMan()
     world.append(shadow_man)
 
-    # sword = short_sword()
-    # world.append(sword)
+    sword = short_sword()
+    world.append(sword)
 
 
 
