@@ -1,7 +1,7 @@
 from pico2d import *
 
 from shadow_man import ShadowMan
-from short_sword import short_sword
+#from short_sword import short_sword
 
 
 # Game object class here
@@ -22,26 +22,22 @@ class background:
 
 def handle_events():
     global running
+
     events = get_events()
     for event in events:
         if event.type == SDL_QUIT:
             running = False
-        elif event.type == SDL_KEYDOWN:
-            if event.key == SDLK_d:
-                print('D키를 눌렀습니다.')
-                world[1].is_walking = True
-            elif event.key == SDLK_ESCAPE:
-                running = False
-        elif event.type == SDL_KEYUP:
-            if event.key == SDLK_d:
-                print('D키를 뗐습니다.')
-                world[1].is_walking = False
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
+            running = False
+        else:
+            shadow_man.handle_event(event)
 
 open_canvas(1920, 1080)
 
 def reset_world():
 
     global running
+    global shadow_man
     running = True
 
     global world # 모든 게임 객체를 담는 리스트
@@ -54,8 +50,8 @@ def reset_world():
     shadow_man = ShadowMan()
     world.append(shadow_man)
 
-    sword = short_sword()
-    world.append(sword)
+    # sword = short_sword()
+    # world.append(sword)
 
 
 
