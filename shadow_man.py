@@ -36,11 +36,17 @@ class Walk:
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        self.shadowMan.current_image.clip_draw(
-            self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
-            self.shadowMan.x, self.shadowMan.y, 300*self.shadowMan.face_dir, 300
-        )
-        pass
+        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
+            self.shadowMan.current_image.clip_draw(
+                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
+        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
+            self.shadowMan.current_image.clip_composite_draw(
+                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+                0, 'h',  # 'h'는 수평 반전
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
 
 class Idle:
     def __init__(self, shadowMan):
@@ -62,11 +68,17 @@ class Idle:
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        self.shadowMan.current_image.clip_draw(
-            self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
-            self.shadowMan.x, self.shadowMan.y, 300, 300
-        )
-        pass
+        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
+            self.shadowMan.current_image.clip_draw(
+                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
+        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
+            self.shadowMan.current_image.clip_composite_draw(
+                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+                0, 'h',  # 'h'는 수평 반전
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
 
 
 class ShadowMan:
