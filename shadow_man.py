@@ -32,7 +32,7 @@ class Walk:
 
     def do(self):
         self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
-        self.shadowMan.x += self.shadowMan.dir * 5
+        self.shadowMan.x += self.shadowMan.dir * 20
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
