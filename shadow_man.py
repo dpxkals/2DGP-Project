@@ -144,16 +144,22 @@ class ShadowMan:
         self.half_width = 150  # 캐릭터 반폭 (300/2)
         self.half_height = 150  # 캐릭터 반높이 (300/2)
 
+        # 스프라이트 이미지 로드 및 속성 설정
         self.idle_image = load_image('그림자검객_idle.png')
         self.walk_image = load_image('그림자검객_walk.png')
         self.dash_image = load_image('그림자검객_dash.png')
         self.back_dash_image = load_image('그림자검객_back_dash.png')
+
         self.idle_sprite_size = (340, 360)
         self.walk_sprite_size = (227, 260)
         self.dash_sprite_size = (400, 285)
+        self.back_dash_sprite_size = (330, 360)
+
         self.frame_idle = 3
         self.frame_walk = 5
         self.frame_dash = 2
+        self.frame_back_dash = 3
+
         # 이동 방향 변수
         self.dir = 0
         # 바라보는 방향 변수
