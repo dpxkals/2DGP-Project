@@ -42,8 +42,10 @@ class Dash:
         self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
         # 대시 이동
         self.shadowMan.x += self.shadowMan.face_dir * self.dash_speed
-        self.dash_timer -= 1
+        # 경계 체크
+        self.shadowMan.clamp_position()
 
+        self.dash_timer -= 1
         # 대시 시간이 끝나면 IDLE로 전환
         if self.dash_timer <= 0:
             self.shadowMan.state_machine.handle_state_event(('DASH_END', None))
@@ -82,6 +84,8 @@ class Walk:
     def do(self):
         self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
         self.shadowMan.x += self.shadowMan.dir * 20
+        # 경계 체크
+        self.shadowMan.clamp_position()
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
@@ -133,9 +137,17 @@ class Idle:
 class ShadowMan:
     def __init__(self):
         self.x, self.y = 200, 300
+
+        # 화면 경계 설정 (화면 크기에 맞게 조정)
+        self.screen_width = 1920  # 화면 너비
+        self.screen_height = 1080  # 화면 높이
+        self.half_width = 150  # 캐릭터 반폭 (300/2)
+        self.half_height = 150  # 캐릭터 반높이 (300/2)
+
         self.idle_image = load_image('그림자검객_idle.png')
         self.walk_image = load_image('그림자검객_walk.png')
         self.dash_image = load_image('그림자검객_dash.png')
+        self.back_dash_image = load_image('그림자검객_back_dash.png')
         self.idle_sprite_size = (340, 360)
         self.walk_sprite_size = (227, 260)
         self.dash_sprite_size = (400, 285)
@@ -164,6 +176,10 @@ class ShadowMan:
                 self.DASH: {dash_end: self.IDLE}
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
+
+    def clamp_position(self):
+        self.x = max(self.half_width, min(self.screen_width - self.half_width, self.x))
+        self.y = max(self.half_height, min(self.screen_height - self.half_height, self.y))
 
     def update(self):
         self.state_machine.update()
