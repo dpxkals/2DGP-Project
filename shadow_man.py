@@ -41,7 +41,7 @@ class Dash:
     def do(self):
         self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
         # 대시 이동
-        self.shadowMan.x += self.shadowMan.face_dir * self.dash_speed
+        self.shadowMan.x += self.shadowMan.dir * self.dash_speed
         # 경계 체크
         self.shadowMan.clamp_position()
 
@@ -74,9 +74,9 @@ class Walk:
         self.shadowMan.current_sprite_size = self.shadowMan.walk_sprite_size
         self.shadowMan.frame = self.shadowMan.frame_walk
         if d_down(e) or a_up(e):
-            self.shadowMan.dir = self.shadowMan.face_dir =1
+            self.shadowMan.dir = 1
         elif a_down(e) or d_up(e):
-            self.shadowMan.dir = self.shadowMan.face_dir = -1
+            self.shadowMan.dir = -1
 
     def exit(self, e):
         pass
