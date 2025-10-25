@@ -177,9 +177,9 @@ class ShadowMan:
         self.state_machine = StateMachine(
             self.IDLE,
             {
-                self.IDLE: {a_down: self.WALK, d_down: self.WALK, l_ctrl_down: self.DASH},
-                self.WALK: {a_up: self.IDLE, d_up: self.IDLE, l_ctrl_down: self.DASH},
-                self.DASH: {dash_end: self.IDLE}
+                self.IDLE: {a_down: self.WALK, d_down: self.WALK, a_up: self.WALK, d_up: self.WALK, l_ctrl_down: self.DASH},
+                self.WALK: {a_down: self.IDLE, d_down: self.IDLE, a_up: self.IDLE, d_up: self.IDLE, l_ctrl_down: self.DASH},
+                self.DASH: {dash_end: self.WALK, l_ctrl_up: self.WALK}
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
 
