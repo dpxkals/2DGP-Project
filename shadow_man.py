@@ -1,24 +1,55 @@
 from pico2d import load_image
-from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d, SDLK_LCTRL
+from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL
 
 from state_machine import StateMachine
 
 # 이벤트 체크 함수
+# down 이벤트
 def a_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
 def d_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
+def j_down(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
+def l_ctrl_down(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LCTRL
+# up 이벤트
 def a_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
 def d_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
-def l_ctrl_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LCTRL
+def j_up(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
 def l_ctrl_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LCTRL
+# 타이머 이벤트
 def dash_end(e):
     return e[0] == 'DASH_END'
 
+class Defence:
+    def __init__(self, shadowMan):
+        self.shadowMan = shadowMan
+        pass
+
+    def enter(self, e):
+        self.shadowMan.current_image = self.shadowMan.defense_image
+        self.shadowMan.current_sprite_size = self.shadowMan.defense_sprite_size
+        self.shadowMan.frame = self.shadowMan.frame_defense
+        pass
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
+        pass
+
+    def draw(self):
+        sprite_w, sprite_h = self.shadowMan.current_sprite_size
+        self.shadowMan.current_image.clip_draw(
+            self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+            self.shadowMan.x, self.shadowMan.y, 300, 300
+        )
 
 class Dash:
     def __init__(self, shadowMan):
@@ -149,16 +180,19 @@ class ShadowMan:
         self.walk_image = load_image('그림자검객_walk.png')
         self.dash_image = load_image('그림자검객_dash.png')
         self.back_dash_image = load_image('그림자검객_back_dash.png')
+        self.defense_image = load_image('그림자검객_defense.png')
 
         self.idle_sprite_size = (340, 360)
         self.walk_sprite_size = (227, 260)
         self.dash_sprite_size = (400, 285)
         self.back_dash_sprite_size = (340, 360)
+        self.defense_sprite_size = (340,290)
 
         self.frame_idle = 3
         self.frame_walk = 5
         self.frame_dash = 2
         self.frame_back_dash = 3
+        self.frame_defense = 1
 
         # 이동 방향 변수
         self.dir = 0
@@ -174,12 +208,18 @@ class ShadowMan:
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
         self.DASH = Dash(self)
+        self.DEFENCE = Defence(self)
         self.state_machine = StateMachine(
             self.IDLE,
             {
-                self.IDLE: {a_down: self.WALK, d_down: self.WALK, a_up: self.WALK, d_up: self.WALK, l_ctrl_down: self.DASH},
-                self.WALK: {a_down: self.IDLE, d_down: self.IDLE, a_up: self.IDLE, d_up: self.IDLE, l_ctrl_down: self.DASH},
-                self.DASH: {dash_end: self.WALK, l_ctrl_up: self.WALK}
+                self.IDLE: {a_down: self.WALK, d_down: self.WALK, a_up: self.WALK, d_up: self.WALK,
+                            l_ctrl_down: self.DASH,
+                            j_down: self.DEFENCE},
+                self.WALK: {a_down: self.IDLE, d_down: self.IDLE, a_up: self.IDLE, d_up: self.IDLE,
+                            l_ctrl_down: self.DASH,
+                            j_down: self.DEFENCE},
+                self.DASH: {dash_end: self.WALK, l_ctrl_up: self.WALK},
+                self.DEFENCE: {j_up: self.IDLE},
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
 
