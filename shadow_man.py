@@ -12,9 +12,9 @@ def a_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
 def d_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
-def lctrl_down(e):
+def l_ctrl_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LCTRL
-def lctrl_up(e):
+def l_ctrl_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LCTRL
 def dash_end(e):
     return e[0] == 'DASH_END'
@@ -23,15 +23,22 @@ def dash_end(e):
 class Dash:
     def __init__(self, shadowMan):
         self.shadowMan = shadowMan
-        self.dash_speed = 100  # 대시 속도
+        self.dash_speed = 80  # 대시 속도
         self.dash_duration = 3  # 대시 지속 프레임
         self.dash_timer = 0
 
     def enter(self, e):
         # 대시 이미지가 있다면 변경 (없다면 walk 이미지 사용)
-        self.shadowMan.current_image = self.shadowMan.dash_image
-        self.shadowMan.current_sprite_size = self.shadowMan.dash_sprite_size
-        self.shadowMan.frame = self.shadowMan.frame_dash
+        if  self.shadowMan.dir == 1:
+            self.shadowMan.current_image = self.shadowMan.dash_image
+            self.shadowMan.current_sprite_size = self.shadowMan.dash_sprite_size
+            self.shadowMan.frame = self.shadowMan.frame_dash
+        elif self.shadowMan.dir == -1:
+            self.shadowMan.current_image = self.shadowMan.back_dash_image
+            self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
+            self.shadowMan.frame = self.shadowMan.frame_back_dash
+
+
         self.dash_timer = self.dash_duration
         # 현재 바라보는 방향으로 대시
 
@@ -52,17 +59,10 @@ class Dash:
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        if self.shadowMan.face_dir == 1:
-            self.shadowMan.current_image.clip_draw(
-                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
-        else:
-            self.shadowMan.current_image.clip_composite_draw(
-                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
-                0, 'h',
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
+        self.shadowMan.current_image.clip_draw(
+            self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+            self.shadowMan.x, self.shadowMan.y, 300, 300
+        )
 
 class Walk:
 
@@ -153,7 +153,7 @@ class ShadowMan:
         self.idle_sprite_size = (340, 360)
         self.walk_sprite_size = (227, 260)
         self.dash_sprite_size = (400, 285)
-        self.back_dash_sprite_size = (330, 360)
+        self.back_dash_sprite_size = (340, 360)
 
         self.frame_idle = 3
         self.frame_walk = 5
@@ -177,8 +177,8 @@ class ShadowMan:
         self.state_machine = StateMachine(
             self.IDLE,
             {
-                self.IDLE: {a_down: self.WALK, d_down: self.WALK, lctrl_down: self.DASH},
-                self.WALK: {a_up: self.IDLE, d_up: self.IDLE, lctrl_down: self.DASH},
+                self.IDLE: {a_down: self.WALK, d_down: self.WALK, l_ctrl_down: self.DASH},
+                self.WALK: {a_up: self.IDLE, d_up: self.IDLE, l_ctrl_down: self.DASH},
                 self.DASH: {dash_end: self.IDLE}
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
