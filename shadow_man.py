@@ -114,7 +114,7 @@ class Walk:
 
     def do(self):
         self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
-        self.shadowMan.x += self.shadowMan.dir * 20
+        self.shadowMan.x += self.shadowMan.dir * 5
         # 경계 체크
         self.shadowMan.clamp_position()
 
@@ -213,7 +213,6 @@ class ShadowMan:
             self.IDLE,
             {
                 self.IDLE: {a_down: self.WALK, d_down: self.WALK, a_up: self.WALK, d_up: self.WALK,
-                            l_ctrl_down: self.DASH,
                             j_down: self.DEFENCE},
                 self.WALK: {a_down: self.IDLE, d_down: self.IDLE, a_up: self.IDLE, d_up: self.IDLE,
                             l_ctrl_down: self.DASH,
