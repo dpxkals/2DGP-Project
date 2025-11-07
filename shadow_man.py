@@ -84,14 +84,10 @@ class Dash:
 
     def enter(self, e):
         # 대시 이미지가 있다면 변경 (없다면 walk 이미지 사용)
-        if  self.shadowMan.dir == 1:
-            self.shadowMan.current_image = self.shadowMan.back_dash_image
-            self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
-            self.shadowMan.frame = self.shadowMan.frame_back_dash
-        elif self.shadowMan.dir == -1:
-            self.shadowMan.current_image = self.shadowMan.back_dash_image
-            self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
-            self.shadowMan.frame = self.shadowMan.frame_back_dash
+        self.shadowMan.current_image = self.shadowMan.back_dash_image
+        self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
+        self.shadowMan.frame = self.shadowMan.frame_back_dash
+
 
 
         self.dash_timer = self.dash_duration
