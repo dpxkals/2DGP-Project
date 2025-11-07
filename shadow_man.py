@@ -18,14 +18,14 @@ FRAMES_PER_ACTION = 5
 FRAMES_PER_SECOND = FRAMES_PER_ACTION * ACTION_PER_TIME
 
 # dash speed
-DASH_SPEED_KMPH = 50.0 # Km / Hour
+DASH_SPEED_KMPH = 100.0 # Km / Hour
 DASH_SPEED_MPM = (DASH_SPEED_KMPH * 1000.0 / 60.0)
 DASH_SPEED_MPS = (DASH_SPEED_MPM / 60.0)
 DASH_SPEED_PPS = (DASH_SPEED_MPS * PIXEL_PER_METER)
 
 DASH_TIME_PER_ACTION = 0.1
 DASH_ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-DASH_FRAMES_PER_ACTION = 3
+DASH_FRAMES_PER_ACTION = 2
 DASH_FRAMES_PER_SECOND = DASH_FRAMES_PER_ACTION * DASH_ACTION_PER_TIME
 
 # 이벤트 체크 함수
@@ -79,14 +79,19 @@ class Defence:
 class Dash:
     def __init__(self, shadowMan):
         self.shadowMan = shadowMan
-        self.dash_duration = 2.5  # 대시 지속 프레임
+        self.dash_duration = 0.4  # 대시 지속 프레임
         self.dash_timer = 0
 
     def enter(self, e):
         # 대시 이미지가 있다면 변경 (없다면 walk 이미지 사용)
-        self.shadowMan.current_image = self.shadowMan.back_dash_image
-        self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
-        self.shadowMan.frame = self.shadowMan.frame_back_dash
+        if self.shadowMan.dir == 1:
+            self.shadowMan.current_image = self.shadowMan.dash_image
+            self.shadowMan.current_sprite_size = self.shadowMan.dash_sprite_size
+            self.shadowMan.frame = self.shadowMan.frame_dash
+        else:
+            self.shadowMan.current_image = self.shadowMan.back_dash_image
+            self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
+            self.shadowMan.frame = self.shadowMan.frame_back_dash
 
 
 
@@ -97,7 +102,7 @@ class Dash:
         pass
 
     def do(self):
-        self.shadowMan.current_frame = (self.shadowMan.current_frame + DASH_FRAMES_PER_SECOND * game_framework.frame_time) % self.shadowMan.frame
+        self.shadowMan.current_frame = ((self.shadowMan.current_frame + DASH_FRAMES_PER_SECOND * game_framework.frame_time) % self.shadowMan.frame)
         # 대시 이동
         self.shadowMan.x += self.shadowMan.dir * DASH_SPEED_PPS * game_framework.frame_time
         # 경계 체크
