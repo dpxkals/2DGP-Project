@@ -1,4 +1,4 @@
-from pico2d import load_image
+from pico2d import load_image, get_time, load_font, draw_rectangle
 from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d
 
 from state_machine import StateMachine
@@ -75,7 +75,15 @@ class short_sword:
 
     def draw(self):
         self.state_machine.draw()
+        draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
         self.state_machine.handle_state_event(('INPUT', event))
         pass
+
+    def get_bb(self):
+        return self.x-20, self.y-40, self.x+20, self.y+40
+
+    def handle_collision(self, group, other):
+        if group == '1p:2p':
+           pass

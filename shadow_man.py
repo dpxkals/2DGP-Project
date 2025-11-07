@@ -1,4 +1,4 @@
-from pico2d import load_image
+from pico2d import load_image, get_time, load_font, draw_rectangle
 from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL
 
 import game_framework
@@ -229,6 +229,12 @@ class ShadowMan:
         self.frame = self.frame_idle
         self.current_frame = 0
 
+        # font
+        self.font = load_font('ENCR10B.TTF', 16)
+
+        # 타격 횟수
+        self.hit_count = 0
+
         # 상태 변화 테이블
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
@@ -256,7 +262,16 @@ class ShadowMan:
 
     def draw(self):
         self.state_machine.draw()
+        self.font.draw(self.x - 10, self.y + 50, f'{self.hit_count:02d}', (255, 255, 0))
+        draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
         self.state_machine.handle_state_event(('INPUT', event))
         pass
+
+    def get_bb(self):
+        return self.x-70, self.y-130, self.x+70, self.y+130
+
+    def handle_collision(self, group, other):
+        if group == '1p:2p':
+            self.hit_count += 1
