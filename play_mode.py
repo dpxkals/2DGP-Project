@@ -39,11 +39,16 @@ def init():
     sword = short_sword()
     game_world.add_object(sword, 1)
 
+    # 충돌 대상 설정 - 근데 아직 완벽한것은 아님 바꿀 건데 일단 적용만
+    game_world.add_collision_pairs('1p:2p', shadow_man, sword)
+
+
 def finish():
     game_world.clear()
 
 def update():
     game_world.update()
+    game_world.handle_collisions()
 
 def draw():
     clear_canvas()
