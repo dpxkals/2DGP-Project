@@ -47,7 +47,7 @@ class Idle:
 
     def enter(self, e):
         self.peasant.current_image = self.peasant.idle_image
-        self.peasant.current_sprite_size = self.peasant.idle_sprite_size
+        self.peasant.current_sprite_size = self.peasant.sprite_size
         self.peasant.frame = self.peasant.frame_idle
     def exit(self, e):
         pass
@@ -65,17 +65,25 @@ class Idle:
 
 class Peasant:
     def __init__(self):
-        self.idle_image = load_image('Peasant_idle.png')
+        # 기본위치(삭제 혹은 변경 예정)
         self.x, self.y = 700, 300
-        self.idle_sprite_size = (96, 96)
+
+        # 스프라이트 이미지 로드
+        self.idle_image = load_image('Peasant_idle.png')
+        self.walk_image = load_image('Peasant_walk.png')
+        # 스프라이트 크기
+        self.sprite_size = (96, 96)
+        # 프레임 수
         self.frame_idle = 6
+        self.frame_walk = 8
+
         # 이동 방향 변수
         self.dir = 0
         # 바라보는 방향 변수
         self.face_dir = 1
         # 현재 스프라이트 이미지 정보 선택 변수
         self.current_image = self.idle_image
-        self.current_sprite_size = self.idle_sprite_size
+        self.current_sprite_size = self.sprite_size
         self.frame = self.frame_idle
         self.current_frame = 0
 
