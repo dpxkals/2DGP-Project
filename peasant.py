@@ -13,8 +13,19 @@ RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
 
 TIME_PER_ACTION = 0.4
 ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
-FRAMES_PER_ACTION = 6
+FRAMES_PER_ACTION = 8
 FRAMES_PER_SECOND = FRAMES_PER_ACTION * ACTION_PER_TIME
+
+# dash speed
+DASH_SPEED_KMPH = 50.0 # Km / Hour 보행 속도
+DASH_SPEED_MPM = (DASH_SPEED_KMPH * 1000.0 / 60.0)
+DASH_SPEED_MPS = (DASH_SPEED_MPM / 60.0)
+DASH_SPEED_PPS = (DASH_SPEED_MPS * PIXEL_PER_METER)
+
+DASH_TIME_PER_ACTION = 0.4
+DASH_ACTION_PER_TIME = 1.0 / DASH_TIME_PER_ACTION
+DASH_FRAMES_PER_ACTION = 6
+DASH_FRAMES_PER_SECOND = DASH_FRAMES_PER_ACTION * DASH_ACTION_PER_TIME
 
 # 이벤트 체크 함수
 def a_down(e):
@@ -36,7 +47,7 @@ def dash_end(e):
 class Dash:
     def __init__(self, Peasant):
         self.peasant = Peasant
-        self.dash_duration = 0.4  # 대시 지속 프레임
+        self.dash_duration = 0.3  # 대시 지속 프레임
         self.dash_timer = 0
 
     def enter(self, e):
@@ -54,9 +65,9 @@ class Dash:
         pass
 
     def do(self):
-        self.peasant.current_frame = (self.peasant.current_frame + FRAMES_PER_SECOND *
+        self.peasant.current_frame = (self.peasant.current_frame + DASH_FRAMES_PER_SECOND *
                                       game_framework.frame_time) % self.peasant.frame
-        self.peasant.x += self.peasant.dir * RUN_SPEED_PPS * game_framework.frame_time
+        self.peasant.x += self.peasant.dir * DASH_SPEED_PPS * game_framework.frame_time
 
         self.peasant.clamp_position()
 
