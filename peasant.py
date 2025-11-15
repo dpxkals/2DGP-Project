@@ -26,6 +26,21 @@ def a_up(e):
 def d_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
 
+class Walk:
+    def __init__(self, Peasant):
+        self.peasant = Peasant
+
+    def enter(self, e):
+        pass
+    def exit(self, e):
+        pass
+
+    def do(self):
+        pass
+
+    def draw(self):
+        pass
+
 class Idle:
     def __init__(self, Peasant):
         self.peasant = Peasant
