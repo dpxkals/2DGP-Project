@@ -2,7 +2,7 @@ from pico2d import *
 
 from back_ground import background
 from shadow_man import ShadowMan
-from short_sword import short_sword
+from peasant import Peasant
 
 import game_world
 
@@ -36,11 +36,11 @@ def init():
     shadow_man = ShadowMan()
     game_world.add_object(shadow_man, 1)
 
-    sword = short_sword()
-    game_world.add_object(sword, 1)
+    peasant = Peasant()
+    game_world.add_object(peasant, 1)
 
     # 충돌 대상 설정 - 근데 아직 완벽한것은 아님 바꿀 건데 일단 적용만
-    game_world.add_collision_pairs('1p:2p', shadow_man, sword)
+    game_world.add_collision_pairs('1p:2p', shadow_man, peasant)
 
 
 def finish():

@@ -14,33 +14,29 @@ def d_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
 
 class Idle:
-    def __init__(self, short_sword):
-        self.short_sword = short_sword
-        pass
+    def __init__(self, Peasant):
+        self.peasant = Peasant
 
     def enter(self, e):
-        self.short_sword.current_image = self.short_sword.idle_image
-        self.short_sword.current_sprite_size = self.short_sword.idle_sprite_size
-        self.short_sword.frame = self.short_sword.frame_idle
-        pass
-
+        self.peasant.current_image = self.peasant.idle_image
+        self.peasant.current_sprite_size = self.peasant.idle_sprite_size
+        self.peasant.frame = self.peasant.frame_idle
     def exit(self, e):
         pass
 
     def do(self):
-        self.short_sword.current_frame = 2
+        self.peasant.current_frame = 3
         pass
 
     def draw(self):
-        sprite_w, sprite_h = self.short_sword.current_sprite_size
-        self.short_sword.current_image.clip_draw(
-            self.short_sword.current_frame * sprite_w, 0, sprite_w, sprite_h,
-            self.short_sword.x, self.short_sword.y, 250, 300
+        sprite_w, sprite_h = self.peasant.current_sprite_size
+        self.peasant.current_image.clip_draw(
+            self.peasant.current_frame * sprite_w, 0, sprite_w, sprite_h,
+            self.peasant.x, self.peasant.y, 250, 300
         )
-        pass
 
 
-class short_sword:
+class Peasant:
     def __init__(self):
         self.idle_image = load_image('Peasant_idle.png')
         self.x, self.y = 700, 300
@@ -79,7 +75,7 @@ class short_sword:
 
     def handle_event(self, event):
         self.state_machine.handle_state_event(('INPUT', event))
-        pass
+
 
     def get_bb(self):
         return self.x-20, self.y-40, self.x+20, self.y+40
