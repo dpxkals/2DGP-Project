@@ -5,8 +5,8 @@ import game_framework
 from state_machine import StateMachine
 
 # Run speed
-PIXEL_PER_METER = (10.0 / 2)  # 10 pixel 5 cm
-RUN_SPEED_KMPH = 20.0 # Km / Hour 보행 속도
+PIXEL_PER_METER = (10.0 / 0.2)  # 10 pixel 5 cm
+RUN_SPEED_KMPH = 10.0 # Km / Hour 보행 속도
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -47,6 +47,8 @@ class Walk:
                                          game_framework.frame_time) % self.peasant.frame
         self.peasant.x += self.peasant.dir * RUN_SPEED_PPS * game_framework.frame_time
 
+        self.peasant.clamp_position()
+
     def draw(self):
         sprite_w, sprite_h = self.peasant.current_sprite_size
         self.peasant.current_image.clip_draw(
@@ -84,8 +86,8 @@ class Peasant:
         # 화면 경계 설정 (화면 크기에 맞게 조정)
         self.screen_width = 1920  # 화면 너비
         self.screen_height = 1080  # 화면 높이
-        self.half_width = 150  # 캐릭터 반폭 (300/2)
-        self.half_height = 150  # 캐릭터 반높이 (300/2)
+        self.half_width = 50  # 캐릭터 반폭 (300/2)
+        self.half_height = 50  # 캐릭터 반높이 (300/2)
 
         # 스프라이트 이미지 로드
         self.idle_image = load_image('Peasant_idle.png')
