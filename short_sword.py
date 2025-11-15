@@ -42,10 +42,10 @@ class Idle:
 
 class short_sword:
     def __init__(self):
-        self.idle_image = load_image('short_sword.png')
+        self.idle_image = load_image('Peasant_idle.png')
         self.x, self.y = 700, 300
-        self.idle_sprite_size = (354, 495)
-        self.frame_idle = 3
+        self.idle_sprite_size = (96, 96)
+        self.frame_idle = 6
         # 이동 방향 변수
         self.dir = 0
         # 바라보는 방향 변수
