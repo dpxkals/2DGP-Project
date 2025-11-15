@@ -31,14 +31,27 @@ class Walk:
         self.peasant = Peasant
 
     def enter(self, e):
-        pass
+        self.peasant.current_image = self.peasant.walk_image
+        self.peasant.current_sprite_size = self.peasant.sprite_size
+        self.peasant.frame = self.peasant.frame_walk
+
+        if d_down(e) or a_up(e):
+            self.peasant.dir = 1
+        elif a_down(e) or d_up(e):
+            self.peasant.dir = -1
     def exit(self, e):
         pass
 
     def do(self):
-        pass
+        self.peasant.current_frame = ( self.peasant.current_frame + FRAMES_PER_SECOND *
+                                         game_framework.frame_time) % self.peasant.frame
+        self.peasant.x += self.peasant.dir * RUN_SPEED_PPS * game_framework.frame_time
 
     def draw(self):
+        sprite_w, sprite_h = self.peasant.current_sprite_size
+        self.peasant.current_image.clip_draw(
+            int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+            self.peasant.x, self.peasant.y, 300, 300)
         pass
 
 class Idle:
@@ -60,13 +73,19 @@ class Idle:
         sprite_w, sprite_h = self.peasant.current_sprite_size
         self.peasant.current_image.clip_draw(
             int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-            self.peasant.x, self.peasant.y, 250, 300
+            self.peasant.x, self.peasant.y, 300, 300
         )
 
 class Peasant:
     def __init__(self):
         # 기본위치(삭제 혹은 변경 예정)
         self.x, self.y = 700, 300
+
+        # 화면 경계 설정 (화면 크기에 맞게 조정)
+        self.screen_width = 1920  # 화면 너비
+        self.screen_height = 1080  # 화면 높이
+        self.half_width = 150  # 캐릭터 반폭 (300/2)
+        self.half_height = 150  # 캐릭터 반높이 (300/2)
 
         # 스프라이트 이미지 로드
         self.idle_image = load_image('Peasant_idle.png')
@@ -96,11 +115,21 @@ class Peasant:
                 self.IDLE: {
                     a_down: self.WALK,
                     d_down: self.WALK,
+                    a_up: self.WALK,
+                    d_up: self.WALK,
+                },
+                self.WALK: {
+                    a_down: self.IDLE,
+                    d_down: self.IDLE,
                     a_up: self.IDLE,
                     d_up: self.IDLE,
                 }
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
+
+    def clamp_position(self):
+        self.x = max(self.half_width, min(self.screen_width - self.half_width, self.x))
+        self.y = max(self.half_height, min(self.screen_height - self.half_height, self.y))
 
     def update(self):
         self.state_machine.update()

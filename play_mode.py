@@ -25,9 +25,11 @@ def handle_events():
             game_framework.quit()
         else:
             shadow_man.handle_event(event)
+            peasant.handle_event(event)
 
 def init():
     global shadow_man
+    global peasant
 
     # 객체들을 생성
     bg = background()
