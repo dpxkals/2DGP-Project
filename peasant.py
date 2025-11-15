@@ -89,12 +89,13 @@ class Peasant:
 
         # 상태 변화 테이블
         self.IDLE = Idle(self)
+        self.WALK = Walk(self)
         self.state_machine = StateMachine(
             self.IDLE,
             {
                 self.IDLE: {
-                    a_down: self.IDLE,
-                    d_down: self.IDLE,
+                    a_down: self.WALK,
+                    d_down: self.WALK,
                     a_up: self.IDLE,
                     d_up: self.IDLE,
                 }
