@@ -1,7 +1,20 @@
 from pico2d import load_image, get_time, load_font, draw_rectangle
 from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d
 
+import game_framework
 from state_machine import StateMachine
+
+# Run speed
+PIXEL_PER_METER = (10.0 / 2)  # 10 pixel 5 cm
+RUN_SPEED_KMPH = 20.0 # Km / Hour 보행 속도
+RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
+RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
+RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
+
+TIME_PER_ACTION = 0.4
+ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+FRAMES_PER_ACTION = 6
+FRAMES_PER_SECOND = FRAMES_PER_ACTION * ACTION_PER_TIME
 
 # 이벤트 체크 함수
 def a_down(e):
@@ -25,16 +38,15 @@ class Idle:
         pass
 
     def do(self):
-        self.peasant.current_frame = 3
+        self.peasant.current_frame = (self.peasant.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.peasant.frame
         pass
 
     def draw(self):
         sprite_w, sprite_h = self.peasant.current_sprite_size
         self.peasant.current_image.clip_draw(
-            self.peasant.current_frame * sprite_w, 0, sprite_w, sprite_h,
+            int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
             self.peasant.x, self.peasant.y, 250, 300
         )
-
 
 class Peasant:
     def __init__(self):
