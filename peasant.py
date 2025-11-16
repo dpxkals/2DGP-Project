@@ -50,6 +50,22 @@ def dash_end(e):
 def defense_done(e):
     return e[0] == 'DEFENSE_DONE'
 
+class Attack:
+    def __init__(self, Peasant):
+        self.peasant = Peasant
+
+    def enter(self, e):
+        pass
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        pass
+
+    def draw(self):
+        pass
+
 class Defense:
     def __init__(self, Peasant):
         self.peasant = Peasant
