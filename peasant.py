@@ -47,21 +47,62 @@ def l_ctrl_up(e):
 # 타이머 이벤트
 def dash_end(e):
     return e[0] == 'DASH_END'
+def defense_done(e):
+    return e[0] == 'DEFENSE_DONE'
 
 class Defense:
     def __init__(self, Peasant):
         self.peasant = Peasant
+        # 멈출 프레임 인덱스 (조정 가능, 0-based)
+        self.hold_frame_index = 5
 
     def enter(self, e):
         self.peasant.current_image = self.peasant.defense_image
         self.peasant.current_sprite_size = self.peasant.sprite_size
         self.peasant.frame = self.peasant.frame_defense
+        # 애니 시작은 0부터
+        self.peasant.current_frame = 0
+
     def exit(self, e):
         pass
 
     def do(self):
-        self.peasant.current_frame = (self.peasant.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.peasant.frame
+        # 자연스럽게 증가시키되 hold_frame_index를 넘지 않게 고정
+        next_frame = self.peasant.current_frame + FRAMES_PER_SECOND * game_framework.frame_time
+        max_hold = min(self.hold_frame_index, self.peasant.frame - 1)
+        if next_frame < max_hold:
+            self.peasant.current_frame = next_frame
+        else:
+            self.peasant.current_frame = max_hold
+
+    def draw(self):
+        sprite_w, sprite_h = self.peasant.current_sprite_size
+        self.peasant.current_image.clip_draw(
+            int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+            self.peasant.x, self.peasant.y, 300, 300
+        )
+class DefenseRelease:
+    def __init__(self, Peasant):
+        self.peasant = Peasant
+
+    def enter(self, e):
+        # 그대로 현재 프레임을 이어서 재생
+        self.peasant.current_image = self.peasant.defense_image
+        self.peasant.current_sprite_size = self.peasant.sprite_size
+        self.peasant.frame = self.peasant.frame_defense
+        # (current_frame는 이전 상태에서 유지)
+
+    def exit(self, e):
         pass
+
+    def do(self):
+        # 남은 프레임을 자연스럽게 재생
+        self.peasant.current_frame = (self.peasant.current_frame +
+                                      FRAMES_PER_SECOND * game_framework.frame_time)
+        # 애니 끝까지 도달하면 Peasant에 이벤트 전송
+        if self.peasant.current_frame >= (self.peasant.frame - 1):
+            # 방어 애니메이션 완료 이벤트
+            self.peasant.state_machine.handle_state_event(('DEFENSE_DONE', None))
 
     def draw(self):
         sprite_w, sprite_h = self.peasant.current_sprite_size
@@ -199,6 +240,7 @@ class Peasant:
         self.WALK = Walk(self)
         self.DASH = Dash(self)
         self.DEFENSE = Defense(self)
+        self.DEFENSE_RELEASE = DefenseRelease(self)
         self.state_machine = StateMachine(
             self.IDLE,
             {
@@ -224,7 +266,10 @@ class Peasant:
                     l_ctrl_up: self.WALK
                 },
                 self.DEFENSE: {
-                    j_up: self.IDLE
+                    j_up: self.DEFENSE_RELEASE
+                },
+                self.DEFENSE_RELEASE: {
+                    defense_done: self.IDLE
                 }
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
