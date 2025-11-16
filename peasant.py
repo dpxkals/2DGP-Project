@@ -1,5 +1,5 @@
 from pico2d import load_image, get_time, load_font, draw_rectangle
-from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d, SDLK_LCTRL
+from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL
 
 import game_framework
 from state_machine import StateMachine
@@ -32,17 +32,43 @@ def a_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
 def d_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
+def j_down(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
 def l_ctrl_down(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LCTRL
 def a_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
 def d_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
+def j_up(e):
+    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
 def l_ctrl_up(e):
     return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LCTRL
 # 타이머 이벤트
 def dash_end(e):
     return e[0] == 'DASH_END'
+
+class Defense:
+    def __init__(self, Peasant):
+        self.peasant = Peasant
+
+    def enter(self, e):
+        self.peasant.current_image = self.peasant.defense_image
+        self.peasant.current_sprite_size = self.peasant.sprite_size
+        self.peasant.frame = self.peasant.frame_defense
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.peasant.current_frame = (self.peasant.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.peasant.frame
+        pass
+
+    def draw(self):
+        sprite_w, sprite_h = self.peasant.current_sprite_size
+        self.peasant.current_image.clip_draw(
+            int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+            self.peasant.x, self.peasant.y, 300, 300
+        )
 
 class Dash:
     def __init__(self, Peasant):
@@ -148,13 +174,15 @@ class Peasant:
         # 스프라이트 이미지 로드
         self.idle_image = load_image('Peasant_idle.png')
         self.walk_image = load_image('Peasant_walk.png')
-        self.dash_image = load_image('Peasant_dach.png')
+        self.dash_image = load_image('Peasant_dash.png')
+        self.defense_image = load_image('Peasant_defense.png')
         # 스프라이트 크기
         self.sprite_size = (96, 96)
         # 프레임 수
         self.frame_idle = 6
         self.frame_walk = 8
         self.frame_dash = 6
+        self.frame_defense = 9
 
         # 이동 방향 변수
         self.dir = 0
@@ -170,6 +198,7 @@ class Peasant:
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
         self.DASH = Dash(self)
+        self.DEFENSE = Defense(self)
         self.state_machine = StateMachine(
             self.IDLE,
             {
@@ -178,17 +207,24 @@ class Peasant:
                     d_down: self.WALK,
                     a_up: self.WALK,
                     d_up: self.WALK,
+
+                    j_down: self.DEFENSE
                 },
                 self.WALK: {
                     a_down: self.IDLE,
                     d_down: self.IDLE,
                     a_up: self.IDLE,
                     d_up: self.IDLE,
-                    l_ctrl_down: self.DASH
+                    l_ctrl_down: self.DASH,
+
+                    j_down: self.DEFENSE
                 },
                 self.DASH: {
                     dash_end: self.WALK,
                     l_ctrl_up: self.WALK
+                },
+                self.DEFENSE: {
+                    j_up: self.IDLE
                 }
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
