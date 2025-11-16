@@ -59,6 +59,36 @@ def attack2_done(e):
     return e[0] == 'ATTACK2_DONE'
 def defense_attack_done(e):
     return e[0] == 'DEFENSE_ATTACK_DONE'
+def hurt_start(e):
+    return e[0] == 'HURT_START'
+def hurt_done(e):
+    return e[0] == 'HURT_DONE'
+
+class Hurt:
+    def __init__(self, Peasant):
+        self.peasant = Peasant
+
+    def enter(self, e):
+        self.peasant.current_image = self.peasant.hurt_image
+        self.peasant.current_sprite_size = self.peasant.sprite_size
+        self.peasant.frame = self.peasant.frame_hurt
+        self.peasant.current_frame = 0
+
+    def exit(self, e):
+        # Hurt 끝나면 다시 피격 가능하도록 플래그 해제
+        self.peasant.is_hurt = False
+
+    def do(self):
+        self.peasant.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.peasant.current_frame >= (self.peasant.frame - 1):
+            self.peasant.state_machine.handle_state_event(('HURT_DONE', None))
+
+    def draw(self):
+        sprite_w, sprite_h = self.peasant.current_sprite_size
+        self.peasant.current_image.clip_draw(
+            int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+            self.peasant.x, self.peasant.y, 300, 300
+        )
 
 class Attack1:
     def __init__(self, Peasant):
@@ -319,6 +349,8 @@ class Peasant:
         self.frame_attack1 = 6
         self.frame_attack2 = 4
         self.frame_defense_attack = 6
+        self.frame_hurt = 2
+        self.frame_dead = 4
 
         # 이동 방향 변수
         self.dir = 0
@@ -339,6 +371,7 @@ class Peasant:
         self.ATTACK1 = Attack1(self)
         self.ATTACK2 = Attack2(self)
         self.DEFENSE_ATTACK = DefenseAttack(self)
+        self.HURT = Hurt(self)
         self.state_machine = StateMachine(
             self.IDLE,
             {
@@ -351,6 +384,7 @@ class Peasant:
                     l_ctrl_down: self.DASH,
                     e_down: self.ATTACK1,
                     q_down: self.ATTACK2,
+                    hurt_start: self.HURT,
                 },
                 self.WALK: {
                     a_down: self.IDLE,
@@ -361,26 +395,36 @@ class Peasant:
                     j_down: self.DEFENSE,
                     e_down: self.ATTACK1,
                     q_down: self.ATTACK2,
+                    hurt_start: self.HURT,
                 },
                 self.DASH: {
                     dash_end: self.WALK,
                     e_down: self.ATTACK1,
                     q_down: self.ATTACK2,
+                    hurt_start: self.HURT,
                 },
                 self.DEFENSE: {
                     j_up: self.DEFENSE_RELEASE,
+                    hurt_start: self.HURT,
                 },
                 self.DEFENSE_RELEASE: {
                     defense_done: self.IDLE,
+                    hurt_start: self.HURT,
                 },
                 self.ATTACK1: {
                     attack1_done: self.WALK,
+                    hurt_start: self.HURT,
                 },
                 self.ATTACK2: {
                     attack2_done: self.WALK,
+                    hurt_start: self.HURT,
                 },
                 self.DEFENSE_ATTACK: {
                     defense_attack_done: self.IDLE,
+                    hurt_start: self.HURT,
+                },
+                self.HURT: {
+                    hurt_done: self.IDLE,
                 }
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
@@ -405,4 +449,17 @@ class Peasant:
 
     def handle_collision(self, group, other):
         if group == '1p:2p':
-           pass
+            # 이미 피격 중이면 중복 피격 방지
+            if getattr(self, 'is_hurt', False):
+                return
+
+            # 피격 플래그 설정
+            self.is_hurt = True
+
+            # 간단한 넉백 처리 (방향에 따라 뒤로 밀기)
+            knockback = 50
+            self.x -= knockback * self.face_dir
+            self.clamp_position()
+
+            # HURT 상태로 전환 (다른 정보가 필요하면 second 인자로 전달)
+            self.state_machine.handle_state_event(('HURT_START', other))
