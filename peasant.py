@@ -233,6 +233,11 @@ class Peasant:
         self.walk_image = load_image('Peasant_walk.png')
         self.dash_image = load_image('Peasant_dash.png')
         self.defense_image = load_image('Peasant_defense.png')
+        self.attack_image = load_image('Peasant_attack1.png')
+        self.attack_image = load_image('Peasant_attack2.png')
+        self.attack_image = load_image('Peasant_defense_attack.png')
+        self.idle_image = load_image('Peasant_hurt.png')
+        self.idle_image = load_image('Peasant_dead.png')
         # 스프라이트 크기
         self.sprite_size = (96, 96)
         # 프레임 수
