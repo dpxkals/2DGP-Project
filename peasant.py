@@ -354,7 +354,7 @@ class Idle:
 class Peasant:
     def __init__(self):
         # 기본위치(삭제 혹은 변경 예정)
-        self.x, self.y = 700, 300
+        self.x, self.y = 100, 300
 
         # 기본 스펙
         self.hp = 200 # 체력
@@ -364,6 +364,9 @@ class Peasant:
         self.attack_power3 = 30 # 방어 상태에서 공격(특수 공격)
         self.defense = 0.5 # 방어력 (피해량 감소 비율)
         self.parry = 0 # 패링을 판정하고 패링이면 피해를 0으로 만듬
+
+        # 피격 플래그 초기화
+        self.is_hurt = False
 
         # 화면 경계 설정 (화면 크기에 맞게 조정)
         self.screen_width = 1920  # 화면 너비
@@ -428,6 +431,7 @@ class Peasant:
                     e_down: self.ATTACK1,
                     q_down: self.ATTACK2,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.WALK: {
                     a_down: self.IDLE,
@@ -439,36 +443,43 @@ class Peasant:
                     e_down: self.ATTACK1,
                     q_down: self.ATTACK2,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.DASH: {
                     dash_end: self.WALK,
                     e_down: self.ATTACK1,
                     q_down: self.ATTACK2,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.DEFENSE: {
                     j_up: self.DEFENSE_RELEASE,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.DEFENSE_RELEASE: {
                     defense_done: self.IDLE,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.ATTACK1: {
                     attack1_done: self.WALK,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.ATTACK2: {
                     attack2_done: self.WALK,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.DEFENSE_ATTACK: {
                     defense_attack_done: self.IDLE,
                     hurt_start: self.HURT,
+                    dead: self.DEAD,
                 },
                 self.HURT: {
                     hurt_done: self.IDLE,
-                    lambda e: e[0] == 'DEAD': self.DEAD,
+                    dead: self.DEAD,
                 },
                 self.DEAD: {}
             }
