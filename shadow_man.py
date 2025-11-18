@@ -194,6 +194,14 @@ class ShadowMan:
     def __init__(self):
         self.x, self.y = 200, 300
 
+        # 기본 스펙
+        self.hp = 200  # 체력
+        self.attack_power1 = 10  # 공격 1
+        self.attack_power2 = 20  # 공격 2
+        self.attack_power3 = 30  # 방어 상태에서 공격(특수 공격)
+        self.defense = 0.5  # 방어력 (피해량 감소 비율)
+        self.parry = 0  # 패링을 판정하고 패링이면 피해를 0으로 만듬
+
         # 화면 경계 설정 (화면 크기에 맞게 조정)
         self.screen_width = 1920  # 화면 너비
         self.screen_height = 1080  # 화면 높이
