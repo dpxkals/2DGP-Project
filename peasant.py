@@ -64,6 +64,31 @@ def hurt_start(e):
 def hurt_done(e):
     return e[0] == 'HURT_DONE'
 
+class Dead:
+    def __init__(self, Peasant):
+        self.peasant = Peasant
+
+    def enter(self, e):
+        self.peasant.current_image = self.peasant.dead_image
+        self.peasant.current_sprite_size = self.peasant.sprite_size
+        self.peasant.frame = self.peasant.frame_dead
+        self.peasant.current_frame = 0
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.peasant.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.peasant.current_frame >= (self.peasant.frame - 1):
+            self.peasant.current_frame = self.peasant.frame - 1  # 멈춤
+
+    def draw(self):
+        sprite_w, sprite_h = self.peasant.current_sprite_size
+        self.peasant.current_image.clip_draw(
+            int(self.peasant.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+            self.peasant.x, self.peasant.y, 300, 300
+        )
+
 class Hurt:
     def __init__(self, Peasant):
         self.peasant = Peasant
