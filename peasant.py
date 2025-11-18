@@ -63,6 +63,8 @@ def hurt_start(e):
     return e[0] == 'HURT_START'
 def hurt_done(e):
     return e[0] == 'HURT_DONE'
+def dead(e):
+    return e[0] == 'DEAD'
 
 class Dead:
     def __init__(self, Peasant):
@@ -405,6 +407,7 @@ class Peasant:
         self.ATTACK2 = Attack2(self)
         self.DEFENSE_ATTACK = DefenseAttack(self)
         self.HURT = Hurt(self)
+        self.DEAD = Dead(self)
         self.state_machine = StateMachine(
             self.IDLE,
             {
@@ -458,7 +461,9 @@ class Peasant:
                 },
                 self.HURT: {
                     hurt_done: self.IDLE,
-                }
+                    lambda e: e[0] == 'DEAD': self.DEAD,
+                },
+                self.DEAD: {}
             }
         )  # 상태머신 생성 및 초기 시작 상태 설정
 
@@ -494,5 +499,9 @@ class Peasant:
             self.x -= knockback * self.face_dir
             self.clamp_position()
 
-            # HURT 상태로 전환 (다른 정보가 필요하면 second 인자로 전달)
-            self.state_machine.handle_state_event(('HURT_START', other))
+            if self.hp <= 0:
+                self.state_machine.handle_state_event(('DEAD', other))
+            else:
+                # HP가 남아있으면 피격 상태로
+                self.hp -= other.attack_power
+                self.state_machine.handle_state_event(('HURT_START', other))
