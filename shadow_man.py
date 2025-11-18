@@ -192,7 +192,7 @@ class Idle:
 
 class ShadowMan:
     def __init__(self):
-        self.x, self.y = 200, 300
+        self.x, self.y = 500, 300
 
         # 기본 스펙
         self.hp = 200  # 체력
