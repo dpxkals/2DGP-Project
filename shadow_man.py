@@ -196,6 +196,7 @@ class ShadowMan:
 
         # 기본 스펙
         self.hp = 200  # 체력
+        self.attack_power = 0  # 공격 상태 3개 중 현재 공격력을 더해서 넘기는 방식으로 함
         self.attack_power1 = 10  # 공격 1
         self.attack_power2 = 20  # 공격 2
         self.attack_power3 = 30  # 방어 상태에서 공격(특수 공격)
