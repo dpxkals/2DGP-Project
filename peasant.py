@@ -127,6 +127,8 @@ class Attack1:
         self.peasant.frame = self.peasant.frame_attack1
         self.peasant.current_frame = 0
 
+        self.peasant.attack_power = self.peasant.attack_power1
+
     def exit(self, e):
         pass
 
@@ -151,6 +153,8 @@ class Attack2:
         self.peasant.current_sprite_size = self.peasant.sprite_size
         self.peasant.frame = self.peasant.frame_attack2
         self.peasant.current_frame = 0
+
+        self.peasant.attack_power = self.peasant.attack_power2
 
     def exit(self, e):
         pass
@@ -177,6 +181,8 @@ class DefenseAttack:
         self.peasant.current_sprite_size = self.peasant.sprite_size
         self.peasant.frame = self.peasant.frame_defense_attack
         self.peasant.current_frame = 0
+
+        self.peasant.attack_power = self.peasant.attack_power3
 
     def exit(self, e):
         pass
@@ -492,6 +498,8 @@ class Peasant:
             if getattr(self, 'is_hurt', False):
                 return
 
+            self.hp -= other.attack_power
+
             # 피격 플래그 설정
             self.is_hurt = True
 
@@ -503,6 +511,4 @@ class Peasant:
             if self.hp <= 0:
                 self.state_machine.handle_state_event(('DEAD', other))
             else:
-                # HP가 남아있으면 피격 상태로
-                self.hp -= other.attack_power
                 self.state_machine.handle_state_event(('HURT_START', other))
