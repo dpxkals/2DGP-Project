@@ -506,10 +506,8 @@ class Peasant:
     def handle_collision(self, group, other):
         if group == '1p:2p':
             # 이미 피격 중이면 중복 피격 방지
-            if getattr(self, 'is_hurt', False):
+            if self.is_hurt:
                 return
-
-            self.hp -= other.attack_power
 
             # 피격 플래그 설정
             self.is_hurt = True
@@ -519,7 +517,13 @@ class Peasant:
             self.x -= knockback * self.face_dir
             self.clamp_position()
 
-            if self.hp <= 0:
+            # HP 감소 후의 값을 미리 계산
+            new_hp = self.hp - other.attack_power
+
+            # 사망 체크 (감소 후 HP로 판단)
+            if new_hp <= 0:
+                self.hp = 0  # HP를 0으로 설정
                 self.state_machine.handle_state_event(('DEAD', other))
             else:
+                self.hp = new_hp  # HP 감소 적용
                 self.state_machine.handle_state_event(('HURT_START', other))
