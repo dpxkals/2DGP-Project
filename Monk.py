@@ -449,7 +449,8 @@ class Monk:
 
     def draw(self):
         self.state_machine.draw()
-        self.font.draw(self.x - 10, self.y + 50, f'{self.hit_count:02d}', (255, 255, 0))
+        # HP 표시 (체력바 텍스트)
+        self.font.draw(self.x - 30, self.y + 80, f'HP: {self.hp}', (255, 0, 0))
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
@@ -470,11 +471,16 @@ class Monk:
             knockback = 50
             self.x -= knockback * self.face_dir
             self.clamp_position()
-            new_hp = self.hp - other.attack_power
+
+            # 방어 중이면 데미지 경감 적용
+            damage = other.attack_power
+            if isinstance(self.state_machine.current_state, (Defense, DefenseRelease)):
+                damage = int(damage * self.defense)  # defense는 0.5이므로 50% 경감
+
+            new_hp = self.hp - damage
             if new_hp <= 0:
                 self.hp = 0
                 self.state_machine.handle_state_event(('DEAD', other))
             else:
                 self.hp = new_hp
                 self.state_machine.handle_state_event(('HURT_START', other))
-

@@ -388,6 +388,9 @@ class Peasant:
         self.frame = self.frame_idle
         self.current_frame = 0
 
+        # 폰트 로드 (체력바 텍스트용)
+        self.font = load_font('ENCR10B.TTF', 24)
+
         # 키 매핑 (인스턴스마다 다르게 설정 가능)
         default_keys = {
             'left': SDLK_a,
@@ -511,6 +514,8 @@ class Peasant:
 
     def draw(self):
         self.state_machine.draw()
+        # HP 표시 (체력바 텍스트)
+        self.font.draw(self.x - 30, self.y + 80, f'HP: {self.hp}', (255, 0, 0))
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
@@ -534,8 +539,12 @@ class Peasant:
             self.x -= knockback * self.face_dir
             self.clamp_position()
 
-            # HP 감소 후의 값을 미리 계산
-            new_hp = self.hp - other.attack_power
+            # 방어 중이면 데미지 경감 적용
+            damage = other.attack_power
+            if isinstance(self.state_machine.current_state, (Defense, DefenseRelease)):
+                damage = int(damage * self.defense)  # defense는 0.5이므로 50% 경감
+
+            new_hp = self.hp - damage
 
             # 사망 체크 (감소 후 HP로 판단)
             if new_hp <= 0:
