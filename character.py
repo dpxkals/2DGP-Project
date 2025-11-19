@@ -53,6 +53,10 @@ class Character:
         else:
             self.state_machine.handle_state_event(('HURT_START', 0))
 
+        knockback_power = 30  # 밀려날 거리
+        self.x -= knockback_power * self.face_dir
+        self.clamp_position()  # 화면 밖으로 나가는 것 방지
+
     def clamp_position(self):
         self.x = max(50, min(1920 - 50, self.x))
         self.y = max(50, min(1080 - 50, self.y))
