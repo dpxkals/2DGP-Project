@@ -73,7 +73,8 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN:
             if event.key == SDLK_ESCAPE:
-                game_framework.quit()
+                import title_mode
+                game_framework.change_mode(title_mode)
 
             # 좌우 이동
             elif event.key == SDLK_LEFT:
