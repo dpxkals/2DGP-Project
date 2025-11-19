@@ -1,16 +1,89 @@
 from pico2d import *
-
-from back_ground import background
 import game_world
 import game_framework
+from back_ground import background
+from Monk import Monk
+from peasant import Peasant
+from ui import UI
+from AI import AIController
 
-# 플레이어 생성/관리 모듈
-import player1 as p1_mod
-import player2 as p2_mod
-
-# 전역 플레이어 인스턴스
 p1 = None
 p2 = None
+ui = None
+ai = None
+
+
+def init():
+    global p1, p2, ui, ai
+
+    # 배경
+    bg = background()
+    game_world.add_object(bg, 0)
+
+    # P1 생성 (키보드 조작)
+    p1 = Peasant()  # 기본 키맵 사용
+    p1.x, p1.y = 400, 300
+    p1.player_id = "1P"
+    game_world.add_object(p1, 1)
+
+    # P2 생성 (AI 조작용 - 키맵은 AI가 시뮬레이션함)
+    p2_keymap = {'left': SDLK_LEFT, 'right': SDLK_RIGHT, 'attack1': SDLK_SLASH}
+    p2 = Monk(key_map=p2_keymap)  # 테스트를 위해 둘 다 Monk 사용, 원하면 Peasant로 변경
+    p2.x, p2.y = 1500, 300
+    p2.player_id = "2P"
+    p2.face_dir = -1  # 시작할 때 왼쪽 보기
+    game_world.add_object(p2, 1)
+
+    # 충돌 파트너 등록 (밀어내기 물리용)
+    game_world.add_collision_pairs('1p:2p', p1, p2)
+
+    # UI 및 AI 생성
+    ui = UI()
+    ai = AIController(p2, p1)  # p2가 AI, p1이 타겟
+
+
+def update():
+    game_world.update()
+    game_world.handle_collisions()  # 밀어내기 처리
+
+    # AI 업데이트
+    ai.update()
+
+    # P1 공격 -> P2 피격 확인
+    check_attack(p1, p2)
+    # P2 공격 -> P1 피격 확인
+    check_attack(p2, p1)
+
+
+def check_attack(attacker, victim):
+    # 공격자가 공격 박스를 가지고 있는지(공격중인지) 확인
+    attack_box = attacker.get_attack_bb()
+    if attack_box == (0, 0, 0, 0): return
+
+    # 피해자 몸통 박스
+    victim_box = victim.get_bb()
+
+    if collide(attack_box, victim_box):
+        # 데미지 적용
+        victim.take_damage(attacker.attack_power)
+
+
+def collide(a, b):
+    left_a, bottom_a, right_a, top_a = a
+    left_b, bottom_b, right_b, top_b = b
+    if left_a > right_b: return False
+    if right_a < left_b: return False
+    if top_a < bottom_b: return False
+    if bottom_a > top_b: return False
+    return True
+
+
+def draw():
+    clear_canvas()
+    game_world.render()
+    ui.draw(p1, p2)  # UI 그리기
+    update_canvas()
+
 
 def handle_events():
     events = get_events()
@@ -19,52 +92,11 @@ def handle_events():
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_ESCAPE:
             game_framework.quit()
-        # 키 이벤트만 플레이어에게 전달해서 처리되지 않은 INPUT 로그를 줄임
-        elif event.type == SDL_KEYDOWN or event.type == SDL_KEYUP:
-            if p1:
-                p1.handle_event(event)
-            if p2:
-                p2.handle_event(event)
+        else:
+            if p1: p1.handle_event(event)
+            # p2는 AI가 조종하므로 이벤트 전달 X (수동 조작 필요하면 주석 해제)
+            #if p2: p2.handle_event(event)
 
-
-def init():
-    global p1, p2
-
-    # 배경 추가
-    bg = background()
-    game_world.add_object(bg, 0)
-
-    # 플레이어 생성 (여기서 캐릭터 선택과 키맵을 지정)
-    # 예: p1은 그림자검객, p2도 그림자검객 선택 가능
-    # p1은 기본 키맵 (A/D/J/LCTRL)
-    p1 = p1_mod.create_player1(char='monk', start_pos=(500,300), key_map=None, layer=1)
-    # p2는 화살표/우측 컨트롤 등 다른 키맵 사용 (같은 캐릭터 선택 가능)
-    # Peasant 클래스는 attack1/attack2도 지원하므로 여기에 포함시킵니다
-    # attack1을 '/' (슬래시), attack2를 오른쪽 Shift로 설정
-    p2_keymap = {
-        'left': SDLK_LEFT,
-        'right': SDLK_RIGHT,
-        'defense': SDLK_PERIOD,
-        'dash': SDLK_RCTRL,
-        'attack1': SDLK_SLASH,
-        'attack2': SDLK_RSHIFT,
-    }
-    p2 = p2_mod.create_player2(char='peasant', start_pos=(1400,300), key_map=p2_keymap, layer=1)
-
-    # 충돌 등록
-    p1_mod.register_collision_with(p2)
 
 def finish():
     game_world.clear()
-
-def update():
-    game_world.update()
-    game_world.handle_collisions()
-
-def draw():
-    clear_canvas()
-    game_world.render()
-    update_canvas()
-
-def pause(): pass
-def resume(): pass
