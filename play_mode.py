@@ -1,6 +1,7 @@
 from pico2d import *
 import game_world
 import game_framework
+import game_data
 from back_ground import background
 from Monk import Monk
 from peasant import Peasant
@@ -34,7 +35,10 @@ def init():
     }
 
     # 1P 생성 (Peasant로 하되 키맵은 key_map_1p 적용)
-    p1 = Peasant(key_map=key_map_1p)
+    if game_data.p1_char == 'Monk':
+        p1 = Monk(key_map=key_map_1p)
+    else:
+        p1 = Peasant(key_map=key_map_1p)
     p1.x, p1.y = 400, 300
     p1.player_id = "1P"
     game_world.add_object(p1, 1)
@@ -53,7 +57,10 @@ def init():
     }
 
     # 2P 생성 (Monk로 하되 키맵은 key_map_2p 적용)
-    p2 = Monk(key_map=key_map_2p)
+    if game_data.p2_char == 'Monk':
+        p2 = Monk(key_map=key_map_2p)
+    else:
+        p2 = Peasant(key_map=key_map_2p)
     p2.x, p2.y = 1500, 300
     p2.player_id = "2P"
     p2.face_dir = -1
@@ -64,7 +71,10 @@ def init():
 
     # UI 및 AI 생성
     ui = UI()
-    ai = AIController(p2, p1)  # p2가 AI, p1이 타겟
+
+    ai = None  # 초기화
+    if game_data.game_mode == 'AI':
+        ai = AIController(p2, p1)  # 2P를 AI가 조종
 
 
 def update():
@@ -72,7 +82,8 @@ def update():
     game_world.handle_collisions()  # 밀어내기 처리
 
     # AI 업데이트
-    ai.update()
+    if ai:  # AI 모드일 때만 업데이트
+        ai.update()
 
     # P1 공격 -> P2 피격 확인
     check_attack(p1, p2)
@@ -119,8 +130,9 @@ def handle_events():
             game_framework.quit()
         else:
             if p1: p1.handle_event(event)
-            # p2는 AI가 조종하므로 이벤트 전달 X (수동 조작 필요하면 주석 해제)
-            #if p2: p2.handle_event(event)
+            # pvp 모드
+            if not ai and p2:
+                p2.handle_event(event)
 
 
 def finish():
