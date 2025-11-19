@@ -20,18 +20,43 @@ def init():
     bg = background()
     game_world.add_object(bg, 0)
 
-    # P1 생성 (키보드 조작)
-    p1 = Peasant()  # 기본 키맵 사용
+    # ---------------------------------------------------------
+    # [1P 키 설정] 캐릭터가 누구든 무조건 이 키를 사용
+    # A(좌), D(우), J(방어), E(약공), Q(강공), LCtrl(대시)
+    # ---------------------------------------------------------
+    key_map_1p = {
+        'left': SDLK_a,
+        'right': SDLK_d,
+        'defense': SDLK_j,
+        'dash': SDLK_LCTRL,
+        'attack1': SDLK_e,
+        'attack2': SDLK_q
+    }
+
+    # 1P 생성 (Peasant로 하되 키맵은 key_map_1p 적용)
+    p1 = Peasant(key_map=key_map_1p)
     p1.x, p1.y = 400, 300
     p1.player_id = "1P"
     game_world.add_object(p1, 1)
 
-    # P2 생성 (AI 조작용 - 키맵은 AI가 시뮬레이션함)
-    p2_keymap = {'left': SDLK_LEFT, 'right': SDLK_RIGHT, 'attack1': SDLK_SLASH}
-    p2 = Monk(key_map=p2_keymap)  # 테스트를 위해 둘 다 Monk 사용, 원하면 Peasant로 변경
+    # ---------------------------------------------------------
+    # [2P 키 설정] 캐릭터가 누구든 무조건 이 키를 사용
+    # 화살표(이동), .(방어), /(약공), RShift(강공), RCtrl(대시)
+    # ---------------------------------------------------------
+    key_map_2p = {
+        'left': SDLK_LEFT,
+        'right': SDLK_RIGHT,
+        'defense': SDLK_PERIOD,  # . 키
+        'dash': SDLK_RCTRL,  # 오른쪽 컨트롤 (대시)
+        'attack1': SDLK_SLASH,  # / 키
+        'attack2': SDLK_RSHIFT  # 오른쪽 쉬프트
+    }
+
+    # 2P 생성 (Monk로 하되 키맵은 key_map_2p 적용)
+    p2 = Monk(key_map=key_map_2p)
     p2.x, p2.y = 1500, 300
     p2.player_id = "2P"
-    p2.face_dir = -1  # 시작할 때 왼쪽 보기
+    p2.face_dir = -1
     game_world.add_object(p2, 1)
 
     # 충돌 파트너 등록 (밀어내기 물리용)
