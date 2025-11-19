@@ -515,7 +515,7 @@ class Peasant:
     def draw(self):
         self.state_machine.draw()
         # HP 표시 (체력바 텍스트)
-        self.font.draw(self.x - 30, self.y + 80, f'HP: {self.hp}', (255, 0, 0))
+        self.font.draw(self.x - 40, self.y + 80, f'HP: {self.hp}', (255, 0, 0))
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):

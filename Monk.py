@@ -341,7 +341,7 @@ class Monk:
         self.current_frame = 0
 
         # 폰트
-        self.font = load_font('ENCR10B.TTF', 16)
+        self.font = load_font('ENCR10B.TTF', 24)
         self.hit_count = 0
 
         # 키맵
