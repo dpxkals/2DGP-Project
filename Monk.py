@@ -460,7 +460,7 @@ class Monk:
                 self.state_machine.handle_state_event(('INPUT', event))
 
     def get_bb(self):
-        return self.x-70, self.y-130, self.x+70, self.y+130
+        return self.x-70, self.y-150, self.x+70, self.y+80
 
     def handle_collision(self, group, other):
         if group == '1p:2p':
