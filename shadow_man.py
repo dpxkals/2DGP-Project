@@ -71,10 +71,17 @@ class Defence:
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        self.shadowMan.current_image.clip_draw(
-            int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-            self.shadowMan.x, self.shadowMan.y, 300, 300
-        )
+        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
+            self.shadowMan.current_image.clip_draw(
+                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
+        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
+            self.shadowMan.current_image.clip_composite_draw(
+                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+                0, 'h',  # 'h'는 수평 반전
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
 
 class Dash:
     def __init__(self, shadowMan):
@@ -84,7 +91,7 @@ class Dash:
 
     def enter(self, e):
         # 대시 이미지가 있다면 변경 (없다면 walk 이미지 사용)
-        if self.shadowMan.dir == 1:
+        if self.shadowMan.dir == -1:
             self.shadowMan.current_image = self.shadowMan.dash_image
             self.shadowMan.current_sprite_size = self.shadowMan.dash_sprite_size
             self.shadowMan.frame = self.shadowMan.frame_dash
@@ -115,10 +122,17 @@ class Dash:
 
     def draw(self):
         sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        self.shadowMan.current_image.clip_draw(
-            int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-            self.shadowMan.x, self.shadowMan.y, 300, 300
-        )
+        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
+            self.shadowMan.current_image.clip_draw(
+                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
+        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
+            self.shadowMan.current_image.clip_composite_draw(
+                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
+                0, 'h',  # 'h'는 수평 반전
+                self.shadowMan.x, self.shadowMan.y, 300, 300
+            )
 
 class Walk:
 
@@ -130,9 +144,9 @@ class Walk:
         self.shadowMan.current_sprite_size = self.shadowMan.walk_sprite_size
         self.shadowMan.frame = self.shadowMan.frame_walk
         if d_down(e) or a_up(e):
-            self.shadowMan.dir = 1
-        elif a_down(e) or d_up(e):
             self.shadowMan.dir = -1
+        elif a_down(e) or d_up(e):
+            self.shadowMan.dir = 1
 
     def exit(self, e):
         pass
@@ -152,7 +166,7 @@ class Walk:
             )
         else:  # 왼쪽을 바라볼 때 (face_dir == -1)
             self.shadowMan.current_image.clip_composite_draw(
-                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
                 0, 'h',  # 'h'는 수평 반전
                 self.shadowMan.x, self.shadowMan.y, 300, 300
             )
@@ -184,7 +198,7 @@ class Idle:
             )
         else:  # 왼쪽을 바라볼 때 (face_dir == -1)
             self.shadowMan.current_image.clip_composite_draw(
-                self.shadowMan.current_frame * sprite_w, 0, sprite_w, sprite_h,
+                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
                 0, 'h',  # 'h'는 수평 반전
                 self.shadowMan.x, self.shadowMan.y, 300, 300
             )
@@ -233,7 +247,7 @@ class ShadowMan:
         # 이동 방향 변수
         self.dir = 0
         # 바라보는 방향 변수
-        self.face_dir = 1
+        self.face_dir = -1
         # 현재 스프라이트 이미지 정보 선택 변수
         self.current_image = self.idle_image
         self.current_sprite_size = self.idle_sprite_size
