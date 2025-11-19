@@ -27,27 +27,6 @@ DASH_ACTION_PER_TIME = 1.0 / DASH_TIME_PER_ACTION
 DASH_FRAMES_PER_ACTION = 6
 DASH_FRAMES_PER_SECOND = DASH_FRAMES_PER_ACTION * DASH_ACTION_PER_TIME
 
-# 이벤트 체크 함수
-def a_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
-def d_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
-def j_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
-def e_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_e
-def q_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_q
-def l_ctrl_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LCTRL
-def a_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
-def d_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
-def j_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
-def l_ctrl_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LCTRL
 # 타이머 이벤트
 def dash_end(e):
     return e[0] == 'DASH_END'
@@ -272,9 +251,10 @@ class Dash:
         self.peasant.current_sprite_size = self.peasant.sprite_size
         self.peasant.frame = self.peasant.frame_dash
 
-        if d_down(e) or a_up(e):
+        # 인스턴스별 키체크 사용
+        if self.peasant.d_down(e) or self.peasant.a_up(e):
             self.peasant.dir = 1
-        elif a_down(e) or d_up(e):
+        elif self.peasant.a_down(e) or self.peasant.d_up(e):
             self.peasant.dir = -1
 
         self.dash_timer = self.dash_duration
@@ -308,9 +288,10 @@ class Walk:
         self.peasant.current_sprite_size = self.peasant.sprite_size
         self.peasant.frame = self.peasant.frame_walk
 
-        if d_down(e) or a_up(e):
+        # 인스턴스별 키체크 사용
+        if self.peasant.d_down(e) or self.peasant.a_up(e):
             self.peasant.dir = 1
-        elif a_down(e) or d_up(e):
+        elif self.peasant.a_down(e) or self.peasant.d_up(e):
             self.peasant.dir = -1
     def exit(self, e):
         pass
@@ -352,7 +333,7 @@ class Idle:
         )
 
 class Peasant:
-    def __init__(self):
+    def __init__(self, key_map=None):
         # 기본위치(삭제 혹은 변경 예정)
         self.x, self.y = 100, 300
 
@@ -407,6 +388,42 @@ class Peasant:
         self.frame = self.frame_idle
         self.current_frame = 0
 
+        # 키 매핑 (인스턴스마다 다르게 설정 가능)
+        default_keys = {
+            'left': SDLK_a,
+            'right': SDLK_d,
+            'defense': SDLK_j,
+            'dash': SDLK_LCTRL,
+            'attack1': SDLK_e,
+            'attack2': SDLK_q,
+        }
+        if key_map:
+            default_keys.update(key_map)
+        self.key_map = default_keys
+
+        # 인스턴스용 이벤트 체크 함수 생성
+        def make_key_check(key, keydown=True):
+            def check(e):
+                if e[0] != 'INPUT':
+                    return False
+                ev = e[1]
+                if keydown:
+                    return ev.type == SDL_KEYDOWN and ev.key == key
+                else:
+                    return ev.type == SDL_KEYUP and ev.key == key
+            return check
+
+        self.a_down = make_key_check(self.key_map['left'], keydown=True)
+        self.d_down = make_key_check(self.key_map['right'], keydown=True)
+        self.j_down = make_key_check(self.key_map['defense'], keydown=True)
+        self.e_down = make_key_check(self.key_map['attack1'], keydown=True)
+        self.q_down = make_key_check(self.key_map['attack2'], keydown=True)
+        self.l_ctrl_down = make_key_check(self.key_map['dash'], keydown=True)
+        self.a_up = make_key_check(self.key_map['left'], keydown=False)
+        self.d_up = make_key_check(self.key_map['right'], keydown=False)
+        self.j_up = make_key_check(self.key_map['defense'], keydown=False)
+        self.l_ctrl_up = make_key_check(self.key_map['dash'], keydown=False)
+
         # 상태 변화 테이블
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
@@ -422,38 +439,38 @@ class Peasant:
             self.IDLE,
             {
                 self.IDLE: {
-                    a_down: self.WALK,
-                    d_down: self.WALK,
-                    a_up: self.WALK,
-                    d_up: self.WALK,
-                    j_down: self.DEFENSE,
-                    l_ctrl_down: self.DASH,
-                    e_down: self.ATTACK1,
-                    q_down: self.ATTACK2,
+                    self.a_down: self.WALK,
+                    self.d_down: self.WALK,
+                    self.a_up: self.WALK,
+                    self.d_up: self.WALK,
+                    self.j_down: self.DEFENSE,
+                    self.l_ctrl_down: self.DASH,
+                    self.e_down: self.ATTACK1,
+                    self.q_down: self.ATTACK2,
                     hurt_start: self.HURT,
                     dead: self.DEAD,
                 },
                 self.WALK: {
-                    a_down: self.IDLE,
-                    d_down: self.IDLE,
-                    a_up: self.IDLE,
-                    d_up: self.IDLE,
-                    l_ctrl_down: self.DASH,
-                    j_down: self.DEFENSE,
-                    e_down: self.ATTACK1,
-                    q_down: self.ATTACK2,
+                    self.a_down: self.IDLE,
+                    self.d_down: self.IDLE,
+                    self.a_up: self.IDLE,
+                    self.d_up: self.IDLE,
+                    self.l_ctrl_down: self.DASH,
+                    self.j_down: self.DEFENSE,
+                    self.e_down: self.ATTACK1,
+                    self.q_down: self.ATTACK2,
                     hurt_start: self.HURT,
                     dead: self.DEAD,
                 },
                 self.DASH: {
                     dash_end: self.WALK,
-                    e_down: self.ATTACK1,
-                    q_down: self.ATTACK2,
+                    self.e_down: self.ATTACK1,
+                    self.q_down: self.ATTACK2,
                     hurt_start: self.HURT,
                     dead: self.DEAD,
                 },
                 self.DEFENSE: {
-                    j_up: self.DEFENSE_RELEASE,
+                    self.j_up: self.DEFENSE_RELEASE,
                     hurt_start: self.HURT,
                     dead: self.DEAD,
                 },
