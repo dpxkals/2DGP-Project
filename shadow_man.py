@@ -1,13 +1,12 @@
 from pico2d import load_image, get_time, load_font, draw_rectangle
-from sdl2 import SDL_KEYDOWN, SDLK_SPACE, SDLK_RIGHT, SDL_KEYUP, SDLK_LEFT, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL
+from sdl2 import SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q
 
 import game_framework
 from state_machine import StateMachine
 
-
 # Run speed
-PIXEL_PER_METER = (10.0 / 0.5)  # 10 pixel 5 cm
-RUN_SPEED_KMPH = 20.0 # Km / Hour 보행 속도
+PIXEL_PER_METER = (10.0 / 0.5)
+RUN_SPEED_KMPH = 20.0
 RUN_SPEED_MPM = (RUN_SPEED_KMPH * 1000.0 / 60.0)
 RUN_SPEED_MPS = (RUN_SPEED_MPM / 60.0)
 RUN_SPEED_PPS = (RUN_SPEED_MPS * PIXEL_PER_METER)
@@ -18,265 +17,428 @@ FRAMES_PER_ACTION = 5
 FRAMES_PER_SECOND = FRAMES_PER_ACTION * ACTION_PER_TIME
 
 # dash speed
-DASH_SPEED_KMPH = 100.0 # Km / Hour
+DASH_SPEED_KMPH = 100.0
 DASH_SPEED_MPM = (DASH_SPEED_KMPH * 1000.0 / 60.0)
 DASH_SPEED_MPS = (DASH_SPEED_MPM / 60.0)
 DASH_SPEED_PPS = (DASH_SPEED_MPS * PIXEL_PER_METER)
 
-DASH_TIME_PER_ACTION = 0.2
-DASH_ACTION_PER_TIME = 1.0 / TIME_PER_ACTION
+DASH_TIME_PER_ACTION = 0.4
+DASH_ACTION_PER_TIME = 1.0 / DASH_TIME_PER_ACTION
 DASH_FRAMES_PER_ACTION = 2
 DASH_FRAMES_PER_SECOND = DASH_FRAMES_PER_ACTION * DASH_ACTION_PER_TIME
 
-# 이벤트 체크 함수
-# down 이벤트
-def a_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_a
-def d_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_d
-def j_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_j
-def l_ctrl_down(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYDOWN and e[1].key == SDLK_LCTRL
-# up 이벤트
-def a_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_a
-def d_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_d
-def j_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_j
-def l_ctrl_up(e):
-    return e[0] == 'INPUT' and e[1].type == SDL_KEYUP and e[1].key == SDLK_LCTRL
-# 타이머 이벤트
+# events
 def dash_end(e):
     return e[0] == 'DASH_END'
 
-class Defence:
-    def __init__(self, shadowMan):
-        self.shadowMan = shadowMan
-        pass
+def defense_done(e):
+    return e[0] == 'DEFENSE_DONE'
+
+def attack1_done(e):
+    return e[0] == 'ATTACK1_DONE'
+
+def attack2_done(e):
+    return e[0] == 'ATTACK2_DONE'
+
+def defense_attack_done(e):
+    return e[0] == 'DEFENSE_ATTACK_DONE'
+
+def hurt_start(e):
+    return e[0] == 'HURT_START'
+
+def hurt_done(e):
+    return e[0] == 'HURT_DONE'
+
+def dead(e):
+    return e[0] == 'DEAD'
+
+# 상태 클래스들 (Peasant와 동일한 구조)
+class Dead:
+    def __init__(self, owner):
+        self.owner = owner
 
     def enter(self, e):
-        self.shadowMan.current_image = self.shadowMan.defense_image
-        self.shadowMan.current_sprite_size = self.shadowMan.defense_sprite_size
-        self.shadowMan.frame = self.shadowMan.frame_defense
-        pass
+        self.owner.current_image = self.owner.dead_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_dead
+        self.owner.current_frame = 0
 
     def exit(self, e):
         pass
 
     def do(self):
-        self.shadowMan.current_frame = (self.shadowMan.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.shadowMan.frame
-        pass
+        self.owner.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.owner.current_frame >= (self.owner.frame - 1):
+            self.owner.current_frame = self.owner.frame - 1
 
     def draw(self):
-        sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
-            self.shadowMan.current_image.clip_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
-        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
-            self.shadowMan.current_image.clip_composite_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                0, 'h',  # 'h'는 수평 반전
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
+
+class Hurt:
+    def __init__(self, owner):
+        self.owner = owner
+
+    def enter(self, e):
+        self.owner.current_image = self.owner.hurt_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_hurt
+        self.owner.current_frame = 0
+
+    def exit(self, e):
+        self.owner.is_hurt = False
+
+    def do(self):
+        self.owner.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.owner.current_frame >= (self.owner.frame - 1):
+            self.owner.state_machine.handle_state_event(('HURT_DONE', None))
+
+    def draw(self):
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
+
+class Attack1:
+    def __init__(self, owner):
+        self.owner = owner
+
+    def enter(self, e):
+        self.owner.current_image = self.owner.attack1_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_attack1
+        self.owner.current_frame = 0
+        self.owner.attack_power = self.owner.attack_power1
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.owner.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.owner.current_frame >= (self.owner.frame - 1):
+            self.owner.state_machine.handle_state_event(('ATTACK1_DONE', None))
+
+    def draw(self):
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
+
+class Attack2:
+    def __init__(self, owner):
+        self.owner = owner
+
+    def enter(self, e):
+        self.owner.current_image = self.owner.attack2_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_attack2
+        self.owner.current_frame = 0
+        self.owner.attack_power = self.owner.attack_power2
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.owner.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.owner.current_frame >= (self.owner.frame - 1):
+            self.owner.state_machine.handle_state_event(('ATTACK2_DONE', None))
+
+    def draw(self):
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
+
+class DefenseAttack:
+    def __init__(self, owner):
+        self.owner = owner
+
+    def enter(self, e):
+        self.owner.current_image = self.owner.defense_attack_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_defense_attack
+        self.owner.current_frame = 0
+        self.owner.attack_power = self.owner.attack_power3
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.owner.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
+        if self.owner.current_frame >= (self.owner.frame - 1):
+            self.owner.state_machine.handle_state_event(('DEFENSE_ATTACK_DONE', None))
+
+    def draw(self):
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
+
+class Defense:
+    def __init__(self, owner):
+        self.owner = owner
+        self.hold_frame_index = 5
+
+    def enter(self, e):
+        self.owner.current_image = self.owner.defense_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_defense
+        self.owner.current_frame = 0
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        next_frame = self.owner.current_frame + FRAMES_PER_SECOND * game_framework.frame_time
+        max_hold = min(self.hold_frame_index, self.owner.frame - 1)
+        if next_frame < max_hold:
+            self.owner.current_frame = next_frame
+        else:
+            self.owner.current_frame = max_hold
+
+    def draw(self):
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
+
+class DefenseRelease:
+    def __init__(self, owner):
+        self.owner = owner
+
+    def enter(self, e):
+        self.owner.current_image = self.owner.defense_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_defense
+
+    def exit(self, e):
+        pass
+
+    def do(self):
+        self.owner.current_frame = (self.owner.current_frame + FRAMES_PER_SECOND * game_framework.frame_time)
+        if self.owner.current_frame >= (self.owner.frame - 1):
+            self.owner.state_machine.handle_state_event(('DEFENSE_DONE', None))
+
+    def draw(self):
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
 
 class Dash:
-    def __init__(self, shadowMan):
-        self.shadowMan = shadowMan
-        self.dash_duration = 0.4  # 대시 지속 프레임
+    def __init__(self, owner):
+        self.owner = owner
+        self.dash_duration = 0.3
         self.dash_timer = 0
 
     def enter(self, e):
-        # 대시 이미지가 있다면 변경 (없다면 walk 이미지 사용)
-        if self.shadowMan.dir == -1:
-            self.shadowMan.current_image = self.shadowMan.dash_image
-            self.shadowMan.current_sprite_size = self.shadowMan.dash_sprite_size
-            self.shadowMan.frame = self.shadowMan.frame_dash
-        else:
-            self.shadowMan.current_image = self.shadowMan.back_dash_image
-            self.shadowMan.current_sprite_size = self.shadowMan.back_dash_sprite_size
-            self.shadowMan.frame = self.shadowMan.frame_back_dash
-
-
-
+        self.owner.current_image = self.owner.dash_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_dash
+        # 방향은 인스턴스 키체크로 결정
+        if self.owner.d_down(e) or self.owner.a_up(e):
+            self.owner.dir = 1
+        elif self.owner.a_down(e) or self.owner.d_up(e):
+            self.owner.dir = -1
         self.dash_timer = self.dash_duration
-        # 현재 바라보는 방향으로 대시
 
     def exit(self, e):
         pass
 
     def do(self):
-        self.shadowMan.current_frame = ((self.shadowMan.current_frame + DASH_FRAMES_PER_SECOND * game_framework.frame_time) % self.shadowMan.frame)
-        # 대시 이동
-        self.shadowMan.x += self.shadowMan.dir * DASH_SPEED_PPS * game_framework.frame_time
-        # 경계 체크
-        self.shadowMan.clamp_position()
-
+        self.owner.current_frame = (self.owner.current_frame + DASH_FRAMES_PER_SECOND * game_framework.frame_time) % self.owner.frame
+        self.owner.x += self.owner.dir * DASH_SPEED_PPS * game_framework.frame_time
+        self.owner.clamp_position()
         self.dash_timer -= game_framework.frame_time
-        # 대시 시간이 끝나면 IDLE로 전환
         if self.dash_timer <= 0:
-            self.shadowMan.state_machine.handle_state_event(('DASH_END', None))
+            self.owner.state_machine.handle_state_event(('DASH_END', None))
 
     def draw(self):
-        sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
-            self.shadowMan.current_image.clip_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
-        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
-            self.shadowMan.current_image.clip_composite_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                0, 'h',  # 'h'는 수평 반전
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
 
 class Walk:
-
-    def __init__(self, shadowMan):
-        self.shadowMan = shadowMan
+    def __init__(self, owner):
+        self.owner = owner
 
     def enter(self, e):
-        self.shadowMan.current_image = self.shadowMan.walk_image
-        self.shadowMan.current_sprite_size = self.shadowMan.walk_sprite_size
-        self.shadowMan.frame = self.shadowMan.frame_walk
-        if d_down(e) or a_up(e):
-            self.shadowMan.dir = -1
-        elif a_down(e) or d_up(e):
-            self.shadowMan.dir = 1
+        self.owner.current_image = self.owner.walk_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_walk
+        if self.owner.d_down(e) or self.owner.a_up(e):
+            self.owner.dir = 1
+        elif self.owner.a_down(e) or self.owner.d_up(e):
+            self.owner.dir = -1
 
     def exit(self, e):
         pass
 
     def do(self):
-        self.shadowMan.current_frame = (self.shadowMan.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.shadowMan.frame
-        self.shadowMan.x += self.shadowMan.dir * RUN_SPEED_PPS * game_framework.frame_time
-        # 경계 체크
-        self.shadowMan.clamp_position()
+        self.owner.current_frame = (self.owner.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.owner.frame
+        self.owner.x += self.owner.dir * RUN_SPEED_PPS * game_framework.frame_time
+        self.owner.clamp_position()
 
     def draw(self):
-        sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
-            self.shadowMan.current_image.clip_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
-        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
-            self.shadowMan.current_image.clip_composite_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                0, 'h',  # 'h'는 수평 반전
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
 
 class Idle:
-    def __init__(self, shadowMan):
-        self.shadowMan = shadowMan
-        pass
+    def __init__(self, owner):
+        self.owner = owner
 
     def enter(self, e):
-        self.shadowMan.current_image = self.shadowMan.idle_image
-        self.shadowMan.current_sprite_size = self.shadowMan.idle_sprite_size
-        self.shadowMan.frame = self.shadowMan.frame_idle
-        pass
+        self.owner.current_image = self.owner.idle_image
+        self.owner.current_sprite_size = self.owner.sprite_size
+        self.owner.frame = self.owner.frame_idle
 
     def exit(self, e):
         pass
 
     def do(self):
-        self.shadowMan.current_frame = (self.shadowMan.current_frame + 1) % self.shadowMan.frame
-        pass
+        self.owner.current_frame = (self.owner.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.owner.frame
 
     def draw(self):
-        sprite_w, sprite_h = self.shadowMan.current_sprite_size
-        if self.shadowMan.face_dir == 1:  # 오른쪽을 바라볼 때
-            self.shadowMan.current_image.clip_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
-        else:  # 왼쪽을 바라볼 때 (face_dir == -1)
-            self.shadowMan.current_image.clip_composite_draw(
-                int(self.shadowMan.current_frame) * sprite_w, 0, sprite_w, sprite_h,
-                0, 'h',  # 'h'는 수평 반전
-                self.shadowMan.x, self.shadowMan.y, 300, 300
-            )
-
+        w, h = self.owner.current_sprite_size
+        self.owner.current_image.clip_draw(int(self.owner.current_frame) * w, 0, w, h, self.owner.x, self.owner.y, 300, 300)
 
 class ShadowMan:
-    def __init__(self):
+    def __init__(self, key_map=None):
+        # 위치
         self.x, self.y = 500, 300
+        # 스탯
+        self.hp = 200
+        self.attack_power = 0
+        self.attack_power1 = 10
+        self.attack_power2 = 20
+        self.attack_power3 = 30
+        self.defense = 0.5
+        self.parry = 0
+        self.is_hurt = False
 
-        # 기본 스펙
-        self.hp = 200  # 체력
+        # 화면/바운딩
+        self.screen_width = 1920
+        self.screen_height = 1080
+        self.half_width = 150
+        self.half_height = 150
 
-        # 상태 체크 없이 일단 디버그를 위해서 데미지 설정 함 수정 해야함
-        self.attack_power = 50  # 공격 상태 3개 중 현재 공격력을 더해서 넘기는 방식으로 함
-        self.attack_power1 = 10  # 공격 1
-        self.attack_power2 = 20  # 공격 2
-        self.attack_power3 = 30  # 방어 상태에서 공격(특수 공격)
-        self.defense = 0.5  # 방어력 (피해량 감소 비율)
-        self.parry = 0  # 패링을 판정하고 패링이면 피해를 0으로 만듬
-
-        # 화면 경계 설정 (화면 크기에 맞게 조정)
-        self.screen_width = 1920  # 화면 너비
-        self.screen_height = 1080  # 화면 높이
-        self.half_width = 150  # 캐릭터 반폭 (300/2)
-        self.half_height = 150  # 캐릭터 반높이 (300/2)
-
-        # 스프라이트 이미지 로드 및 속성 설정
+        # 이미지 로드 (그림자검객 이미지로 교체)
         self.idle_image = load_image('그림자검객_idle.png')
         self.walk_image = load_image('그림자검객_walk.png')
         self.dash_image = load_image('그림자검객_dash.png')
-        self.back_dash_image = load_image('그림자검객_back_dash.png')
         self.defense_image = load_image('그림자검객_defense.png')
+        self.attack1_image = load_image('그림자검객_idle.png')
+        self.attack2_image = load_image('그림자검객_idle.png')
+        self.defense_attack_image = load_image('그림자검객_idle.png')
+        self.hurt_image = load_image('그림자검객_idle.png')
+        self.dead_image = load_image('그림자검객_idle.png')
 
-        self.idle_sprite_size = (340, 360)
-        self.walk_sprite_size = (227, 260)
-        self.dash_sprite_size = (400, 285)
-        self.back_dash_sprite_size = (340, 360)
-        self.defense_sprite_size = (340,290)
-
+        # 스프라이트 및 프레임 (간단히 기존 값 사용)
+        self.sprite_size = (227, 260)
         self.frame_idle = 3
         self.frame_walk = 5
         self.frame_dash = 2
-        self.frame_back_dash = 3
         self.frame_defense = 1
+        self.frame_attack1 = 4
+        self.frame_attack2 = 4
+        self.frame_defense_attack = 4
+        self.frame_hurt = 2
+        self.frame_dead = 4
 
-        # 이동 방향 변수
+        # 이동/방향
         self.dir = 0
-        # 바라보는 방향 변수
         self.face_dir = -1
-        # 현재 스프라이트 이미지 정보 선택 변수
         self.current_image = self.idle_image
-        self.current_sprite_size = self.idle_sprite_size
+        self.current_sprite_size = self.sprite_size
         self.frame = self.frame_idle
         self.current_frame = 0
 
-        # font
+        # 폰트
         self.font = load_font('ENCR10B.TTF', 16)
-
-        # 타격 횟수
         self.hit_count = 0
 
-        # 상태 변화 테이블
+        # 키맵
+        default_keys = {
+            'left': SDLK_a,
+            'right': SDLK_d,
+            'defense': SDLK_j,
+            'dash': SDLK_LCTRL,
+            'attack1': SDLK_e,
+            'attack2': SDLK_q,
+        }
+        if key_map:
+            default_keys.update(key_map)
+        self.key_map = default_keys
+
+        def make_key_check(key, keydown=True):
+            def check(e):
+                if e[0] != 'INPUT':
+                    return False
+                ev = e[1]
+                if keydown:
+                    return ev.type == SDL_KEYDOWN and ev.key == key
+                else:
+                    return ev.type == SDL_KEYUP and ev.key == key
+            return check
+
+        self.a_down = make_key_check(self.key_map['left'], keydown=True)
+        self.d_down = make_key_check(self.key_map['right'], keydown=True)
+        self.j_down = make_key_check(self.key_map['defense'], keydown=True)
+        self.e_down = make_key_check(self.key_map['attack1'], keydown=True)
+        self.q_down = make_key_check(self.key_map['attack2'], keydown=True)
+        self.l_ctrl_down = make_key_check(self.key_map['dash'], keydown=True)
+        self.a_up = make_key_check(self.key_map['left'], keydown=False)
+        self.d_up = make_key_check(self.key_map['right'], keydown=False)
+        self.j_up = make_key_check(self.key_map['defense'], keydown=False)
+        self.l_ctrl_up = make_key_check(self.key_map['dash'], keydown=False)
+
+        # 상태 객체
         self.IDLE = Idle(self)
         self.WALK = Walk(self)
         self.DASH = Dash(self)
-        self.DEFENCE = Defence(self)
+        self.DEFENSE = Defense(self)
+        self.DEFENSE_RELEASE = DefenseRelease(self)
+        self.ATTACK1 = Attack1(self)
+        self.ATTACK2 = Attack2(self)
+        self.DEFENSE_ATTACK = DefenseAttack(self)
+        self.HURT = Hurt(self)
+        self.DEAD = Dead(self)
+
         self.state_machine = StateMachine(
             self.IDLE,
             {
-                self.IDLE: {a_down: self.WALK, d_down: self.WALK, a_up: self.WALK, d_up: self.WALK,
-                            j_down: self.DEFENCE},
-                self.WALK: {a_down: self.IDLE, d_down: self.IDLE, a_up: self.IDLE, d_up: self.IDLE,
-                            l_ctrl_down: self.DASH,
-                            j_down: self.DEFENCE},
-                self.DASH: {dash_end: self.WALK, l_ctrl_up: self.WALK},
-                self.DEFENCE: {j_up: self.IDLE},
+                self.IDLE: {self.a_down: self.WALK,
+                            self.d_down: self.WALK,
+                            self.a_up: self.WALK,
+                            self.d_up: self.WALK,
+                            self.j_down: self.DEFENSE,
+                            self.l_ctrl_down: self.DASH,
+                            self.e_down: self.ATTACK1,
+                            self.q_down: self.ATTACK2,
+                            hurt_start: self.HURT,
+                            dead: self.DEAD},
+                self.WALK: {self.a_down: self.IDLE,
+                            self.d_down: self.IDLE,
+                            self.a_up: self.IDLE,
+                            self.d_up: self.IDLE,
+                            self.l_ctrl_down: self.DASH,
+                            self.j_down: self.DEFENSE,
+                            self.e_down: self.ATTACK1,
+                            self.q_down: self.ATTACK2,
+                            hurt_start: self.HURT,
+                            dead: self.DEAD},
+                self.DASH: {dash_end: self.WALK,
+                            self.e_down: self.ATTACK1,
+                            self.q_down: self.ATTACK2,
+                            hurt_start: self.HURT,
+                            dead: self.DEAD},
+                self.DEFENSE: {self.j_up: self.DEFENSE_RELEASE,
+                               hurt_start: self.HURT,
+                               dead: self.DEAD},
+                self.DEFENSE_RELEASE: {defense_done: self.IDLE,
+                                       hurt_start: self.HURT,
+                                       dead: self.DEAD},
+                self.ATTACK1: {attack1_done: self.WALK,
+                               hurt_start: self.HURT,
+                               dead: self.DEAD},
+                self.ATTACK2: {attack2_done: self.WALK,
+                               hurt_start: self.HURT,
+                               dead: self.DEAD},
+                self.DEFENSE_ATTACK: {defense_attack_done: self.IDLE,
+                                       hurt_start: self.HURT,
+                                       dead: self.DEAD},
+                self.HURT: {hurt_done: self.IDLE,
+                            dead: self.DEAD},
+                self.DEAD: {}
             }
-        )  # 상태머신 생성 및 초기 시작 상태 설정
+        )
 
     def clamp_position(self):
         self.x = max(self.half_width, min(self.screen_width - self.half_width, self.x))
@@ -291,12 +453,27 @@ class ShadowMan:
         draw_rectangle(*self.get_bb())
 
     def handle_event(self, event):
-        self.state_machine.handle_state_event(('INPUT', event))
-        pass
+        # 키 이벤트만 전달 (인스턴스 키맵에 없는 키는 무시)
+        if event.type == SDL_KEYDOWN or event.type == SDL_KEYUP:
+            valid = {k for k in self.key_map.values() if k is not None}
+            if event.key in valid:
+                self.state_machine.handle_state_event(('INPUT', event))
 
     def get_bb(self):
         return self.x-70, self.y-130, self.x+70, self.y+130
 
     def handle_collision(self, group, other):
         if group == '1p:2p':
-            self.hit_count += 1
+            if self.is_hurt:
+                return
+            self.is_hurt = True
+            knockback = 50
+            self.x -= knockback * self.face_dir
+            self.clamp_position()
+            new_hp = self.hp - other.attack_power
+            if new_hp <= 0:
+                self.hp = 0
+                self.state_machine.handle_state_event(('DEAD', other))
+            else:
+                self.hp = new_hp
+                self.state_machine.handle_state_event(('HURT_START', other))
