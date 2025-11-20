@@ -32,9 +32,7 @@ class AIController:
         target_state_name = self.target.state_machine.current_state.__class__.__name__
         is_target_attacking = target_state_name in ['Attack1', 'Attack2']
 
-        # --- 🧠 AI 판단 로직 (Decision Tree) ---
-
-        # [우선순위 1] 상대가 공격 중이고, 거리가 가까우면 -> 방어!
+        # [우선순위 1] 상대가 공격 중이고, 거리가 가까우면 -> 방어
         if is_target_attacking and abs_dist < 150:
             self.change_action('DEFEND')
             self.think_time = get_time() + 0.5  # 0.5초 동안 방어 유지
@@ -42,7 +40,7 @@ class AIController:
         # [우선순위 2] 거리가 멀면 -> 추적
         elif abs_dist > self.attack_range:
             self.change_action('CHASE', direction)
-            self.think_time = get_time() + 0.1  # 자주 갱신
+            self.think_time = get_time() + 0.1
 
         # [우선순위 3] 거리가 가까우면 -> 공격
         else:
