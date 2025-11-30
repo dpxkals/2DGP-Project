@@ -12,8 +12,19 @@ class AIController:
         self.build_behavior_tree()
 
     def update(self):
+        my_state = self.me.state_machine.current_state.__class__.__name__
+
+        if my_state == 'Hurt':
+            # 맞고 있을 때는 키 입력을 다 떼고, 기억을 지워버림 (리셋)
+            self.release_all_keys()
+            self.pressed_keys.clear()
+            return  # 맞을 때는 AI 판단 중지
+
+        # 쿨타임 감소
         if self.attack_cooldown > 0:
             self.attack_cooldown -= game_framework.frame_time
+
+        # 행동 트리 실행
         self.bt.run()
 
     def build_behavior_tree(self):
@@ -21,7 +32,7 @@ class AIController:
         a_defend = Action('방어하기', self.do_defend)
         seq_defense = Sequence('위협 감지 시 방어', c_is_threatened, a_defend)
 
-        c_is_far = Condition('거리가 먼가?', self.is_far, 100)
+        c_is_far = Condition('거리가 먼가?', self.is_far, 10)
         a_chase = Action('추적하기', self.do_chase)
         seq_chase = Sequence('거리 좁히기', c_is_far, a_chase)
 
