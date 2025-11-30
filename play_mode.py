@@ -92,47 +92,48 @@ def finish():
 
 
 def update():
-    global game_phase, phase_start_time, p1_score, p2_score, round_num
-
-    # -------------------------------------------------------
-    # 1. 전투 진행 중 (FIGHT)
-    # -------------------------------------------------------
-    if game_phase == 'FIGHT':
+    def update():
+        global game_phase, phase_start_time, p1_score, p2_score, round_num
         game_world.update()
-        game_world.handle_collisions()
 
-        if ai: ai.update()
+        # -------------------------------------------------------
+        # 1. 전투 진행 중 (FIGHT)
+        # -------------------------------------------------------
+        if game_phase == 'FIGHT':
+            game_world.handle_collisions()  # 밀어내기 물리 적용
 
-        check_attack(p1, p2)
-        check_attack(p2, p1)
+            if ai: ai.update()  # AI 판단
 
-        # 승패 체크 (HP가 0 이하가 되면 라운드 종료)
-        if p1.hp <= 0:
-            finish_round(winner='2P')
-        elif p2.hp <= 0:
-            finish_round(winner='1P')
+            check_attack(p1, p2)
+            check_attack(p2, p1)
 
-    # -------------------------------------------------------
-    # 2. 라운드 종료 대기 (ROUND_OVER)
-    # -------------------------------------------------------
-    elif game_phase == 'ROUND_OVER':
-        # 3초 동안 결과 보여주고 다음으로 넘어감
-        if get_time() - phase_start_time > 3.0:
-            # 누군가 2승을 먼저 했는지 확인
-            if p1_score >= 2 or p2_score >= 2:
-                game_phase = 'GAME_OVER'
-                phase_start_time = get_time()
-            else:
-                next_round()  # 다음 라운드 시작
+            # 승패 체크
+            if p1.hp <= 0:
+                finish_round(winner='2P')
+            elif p2.hp <= 0:
+                finish_round(winner='1P')
 
-    # -------------------------------------------------------
-    # 3. 게임 완전 종료 (GAME_OVER)
-    # -------------------------------------------------------
-    elif game_phase == 'GAME_OVER':
-        # 4초 뒤 타이틀 화면으로 이동
-        if get_time() - phase_start_time > 4.0:
-            import title_mode
-            game_framework.change_mode(title_mode)
+        # -------------------------------------------------------
+        # 2. 라운드 종료 대기 (ROUND_OVER)
+        # -------------------------------------------------------
+        elif game_phase == 'ROUND_OVER':
+            # game_world.update()가 맨 위에서 실행되므로,
+            # 여기서 3초 기다리는 동안 패배자는 바닥에 쓰러지는 애니메이션을 계속 수행합니다.
+
+            if get_time() - phase_start_time > 3.0:
+                if p1_score >= 2 or p2_score >= 2:
+                    game_phase = 'GAME_OVER'
+                    phase_start_time = get_time()
+                else:
+                    next_round()
+
+        # -------------------------------------------------------
+        # 3. 게임 완전 종료 (GAME_OVER)
+        # -------------------------------------------------------
+        elif game_phase == 'GAME_OVER':
+            if get_time() - phase_start_time > 4.0:
+                import title_mode
+                game_framework.change_mode(title_mode)
 
 
 def finish_round(winner):
