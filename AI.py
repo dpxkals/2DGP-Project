@@ -13,7 +13,7 @@ class AIController:
         self.build_behavior_tree()
 
     def update(self):
-        # 피격 중이면 AI 리셋 (멍때림 방지)
+        # 피격 중이면 AI 리셋
         my_state = self.me.state_machine.current_state.__class__.__name__
         if my_state == 'Hurt':
             self.release_all_keys()
@@ -23,7 +23,7 @@ class AIController:
         if self.attack_cooldown > 0:
             self.attack_cooldown -= game_framework.frame_time
 
-        # 키 상태 관리: 대쉬가 끝났는데 키를 누르고 있으면 떼줌 (재사용 위해)
+        # 키 상태 관리: 대쉬가 끝났는데 키를 누르고 있으면 떼줌
         if my_state != 'Dash' and self.me.key_map['dash'] in self.pressed_keys:
             self.release_key(self.me.key_map['dash'])
 
@@ -35,29 +35,24 @@ class AIController:
         a_defend = Action('방어하기', self.do_defend)
         seq_defense = Sequence('위협 시 방어', c_threat, a_defend)
 
-        # 2. 대쉬 후퇴 (Hit & Run)
-        # 조건: 공격 후 쿨타임 중이고, 적과 너무 가까우면 -> 뒤로 대쉬
-        c_retreat_need = Condition('후퇴 필요한가?', self.need_to_retreat, 120)
-        a_dash_back = Action('뒤로 대쉬', self.do_dash_retreat)
-        seq_retreat = Sequence('치고 빠지기', c_retreat_need, a_dash_back)
-
-        # 3. 대쉬 추격 (Gap Closing)
+        # 2. 대쉬 추격 (Gap Closing) - 앞으로만 대쉬
         # 조건: 적과 거리가 아주 멀면 -> 앞으로 대쉬
         c_very_far = Condition('너무 먼가?', self.is_very_far, 300)
         a_dash_fwd = Action('앞으로 대쉬', self.do_dash_chase)
         seq_dash_chase = Sequence('급습', c_very_far, a_dash_fwd)
 
-        # 4. 일반 추격
+        # 3. 일반 추격
         c_far = Condition('거리가 먼가?', self.is_far, 100)
         a_chase = Action('걸어서 추격', self.do_chase)
         seq_chase = Sequence('추적', c_far, a_chase)
 
-        # 5. 공격 및 대기
+        # 4. 공격 및 대기
         a_attack = Action('공격', self.do_attack)
         a_idle = Action('대기', self.do_idle)
 
-        # 우선순위: 방어 > 후퇴 > 급습 > 추적 > 공격 > 대기
-        root = Selector('AI 판단', seq_defense, seq_retreat, seq_dash_chase, seq_chase, a_attack, a_idle)
+        # 우선순위: 방어 > 급습(앞대쉬) > 추적 > 공격 > 대기
+        # (후퇴 로직 제거됨)
+        root = Selector('AI 판단', seq_defense, seq_dash_chase, seq_chase, a_attack, a_idle)
         self.bt = BehaviorTree(root)
 
     # --- 조건 함수 (Conditions) ---
@@ -65,20 +60,12 @@ class AIController:
     def is_threatened(self, dist):
         d = abs(self.target.x - self.me.x)
         t_state = self.target.state_machine.current_state.__class__.__name__
+        # 상대가 공격 중이고 거리가 가까우면 위협으로 간주
         if t_state in ['Attack1', 'Attack2'] and d < dist:
             return BehaviorTree.SUCCESS
         return BehaviorTree.FAIL
 
-    def need_to_retreat(self, dist):
-        """공격 쿨타임 중(무방비)인데 적이 가까이 있으면 후퇴"""
-        d = abs(self.target.x - self.me.x)
-        # 쿨타임이 남아있고 && 거리가 가까우면
-        if self.attack_cooldown > 0.1 and d < dist:
-            return BehaviorTree.SUCCESS
-        return BehaviorTree.FAIL
-
     def is_very_far(self, dist):
-        """거리가 300픽셀 이상 벌어지면"""
         d = abs(self.target.x - self.me.x)
         if d > dist:
             return BehaviorTree.SUCCESS
@@ -94,24 +81,8 @@ class AIController:
 
     def do_defend(self):
         self.release_move_keys()
-        self.release_key(self.me.key_map['dash'])  # 대쉬 중이면 캔슬 시도
+        self.release_key(self.me.key_map['dash'])
         self.press_key(self.me.key_map['defense'])
-        return BehaviorTree.SUCCESS
-
-    def do_dash_retreat(self):
-        """적 반대 방향으로 대쉬"""
-        self.release_key(self.me.key_map['defense'])
-
-        # 적 반대 방향 키 누르기
-        if self.target.x > self.me.x:  # 적이 오른쪽에 있으면
-            self.press_key(self.me.key_map['left'])  # 왼쪽으로
-            self.release_key(self.me.key_map['right'])
-        else:
-            self.press_key(self.me.key_map['right'])  # 오른쪽으로
-            self.release_key(self.me.key_map['left'])
-
-        # 대쉬 키 입력 (톡 누름)
-        self.tap_key(self.me.key_map['dash'])
         return BehaviorTree.SUCCESS
 
     def do_dash_chase(self):
@@ -133,7 +104,7 @@ class AIController:
     def do_chase(self):
         """걸어서 추격"""
         self.release_key(self.me.key_map['defense'])
-        self.release_key(self.me.key_map['dash'])  # 혹시 대쉬 키 눌려있으면 뗌
+        self.release_key(self.me.key_map['dash'])
 
         if self.target.x > self.me.x:
             self.press_key(self.me.key_map['right'])
@@ -148,7 +119,7 @@ class AIController:
             self.do_idle()
             return BehaviorTree.SUCCESS
 
-        self.release_all_keys()  # 이동 멈춤
+        self.release_all_keys()
 
         # 30% 강공격, 70% 약공격
         if random.random() < 0.3:
@@ -184,9 +155,6 @@ class AIController:
 
     def tap_key(self, key):
         self.press_key(key)
-        # 대쉬 같은 경우 트리거를 위해 바로 떼는 신호를 보내는게 나을 수 있음
-        # 다만 press 상태가 한 프레임 유지되어야 한다면 update에서 처리해야 하나,
-        # 여기서는 즉시 뗌 (Pico2d 이벤트 큐 순서상 DOWN -> UP 순차 처리됨)
         self.release_key(key)
 
 
