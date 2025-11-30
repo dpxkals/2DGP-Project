@@ -1,4 +1,4 @@
-from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q
+from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q, get_time
 from character import Character, State, FRAMES_PER_SECOND
 import game_framework
 from state_machine import StateMachine
@@ -65,8 +65,12 @@ class Defense(State):
         self.entity.defense_factor = 0.5  # 데미지 반감
         self.hold_frame = 2  # 방어 자세 고정 프레임
 
+        # 패링 적용을 위한
+        self.entity.defense_start_time = get_time()
+
     def exit(self, e):
         self.entity.defense_factor = 1.0
+        self.entity.defense_start_time = 0  # 초기화
 
     def do(self):
         next_frame = self.entity.current_frame + FRAMES_PER_SECOND * game_framework.frame_time
