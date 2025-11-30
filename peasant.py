@@ -1,5 +1,5 @@
 from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q, SDLK_LEFT, \
-    SDLK_RIGHT, SDLK_SLASH, SDLK_RSHIFT, SDLK_PERIOD, SDLK_RCTRL
+    SDLK_RIGHT, SDLK_SLASH, SDLK_RSHIFT, SDLK_PERIOD, SDLK_RCTRL, get_time
 from character import Character, State, Idle, Walk, Hurt, Dead, FRAMES_PER_SECOND
 import game_framework
 from state_machine import StateMachine
@@ -44,8 +44,11 @@ class Defense(State):
         self.entity.current_frame = 0
         self.entity.defense_factor = 0.5  # 데미지 50% 감소
 
+        self.entity.defense_start_time = get_time()
+
     def exit(self, e):
         self.entity.defense_factor = 1.0  # 방어 해제
+        self.entity.defense_start_time = 0  # 초기화
 
     def do(self):
         # 방어 자세를 취하다가 hold_frame에서 멈춤
@@ -178,9 +181,23 @@ class Peasant(Character):
         return 0, 0, 0, 0
 
     def take_damage(self, amount):
-        """방어 상태일 때 데미지 경감 로직 오버라이딩"""
-        final_damage = amount * self.defense_factor
-        super().take_damage(final_damage)
+        # 1. 방어 상태인지 확인
+        if isinstance(self.state_machine.current_state, Defense):
+            # 2. 타이밍 계산
+            current_time = get_time()
+            timing = current_time - getattr(self, 'defense_start_time', 0)
+
+            # 3. 0.2초 이내면 패링 성공 (데미지 0)
+            if timing < 0.2:
+                print("★ PEASANT PARRY SUCCESS! ★")
+                return
+
+            # 4. 늦었으면 일반 방어
+            print("Peasant Guard")
+            amount = amount * self.defense_factor
+
+        # 원래 데미지 처리 로직 실행
+        super().take_damage(amount)
 
     def setup_keys(self, key_map):
         # 기본 키맵 (플레이어 2가 Peasant일 경우를 대비해 화살표 키 등을 기본값으로 둘 수도 있음)
