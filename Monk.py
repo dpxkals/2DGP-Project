@@ -171,8 +171,24 @@ class Monk(Character):
         return 0, 0, 0, 0
 
     def take_damage(self, amount):
-        final_damage = amount * self.defense_factor
-        super().take_damage(final_damage)
+        # 1. 방어 상태인지 확인
+        if isinstance(self.state_machine.current_state, Defense):
+            # 2. 방어 시작한지 얼마나 지났는지 계산
+            current_time = get_time()
+            timing = current_time - getattr(self, 'defense_start_time', 0)
+
+            # 3. 0.2초 이내라면 '패링 성공' (데미지 0)
+            if timing < 0.2:
+                print("PARRY SUCCESS!")
+                # 여기에 팅~ 하는 효과음 추가 할지도
+                return  # 데미지 적용 안 하고 함수 종료
+
+            # 4. 타이밍 늦었으면 그냥 일반 방어 (데미지 반감)
+            print("Guard (Damage Reduced)")
+            amount = amount * self.defense_factor
+
+        # --- 아래는 기존 피격 로직 ---
+        super().take_damage(amount)
 
     def setup_keys(self, key_map):
         default_keys = {
