@@ -31,13 +31,13 @@ class AIController:
 
     def build_behavior_tree(self):
         # 1. 방어 (최우선)
-        c_threat = Condition('위협 감지', self.is_threatened, 150)
+        c_threat = Condition('위협 감지', self.is_threatened, 100)
         a_defend = Action('방어하기', self.do_defend)
         seq_defense = Sequence('위협 시 방어', c_threat, a_defend)
 
-        # 2. 후퇴 (Hit & Run) - ★ 다시 추가됨
+        # 2. 후퇴 (Hit & Run)
         # 조건: 공격 쿨타임 중이고(무방비), 적이 가까우면 -> 적 반대로 대쉬
-        c_retreat = Condition('후퇴 필요한가?', self.need_to_retreat, 150)
+        c_retreat = Condition('후퇴 필요한가?', self.need_to_retreat, 100)
         a_retreat = Action('방향잡고 후퇴', self.do_dash_retreat)
         seq_retreat = Sequence('치고 빠지기', c_retreat, a_retreat)
 
