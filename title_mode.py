@@ -5,6 +5,8 @@ import game_data  # 선택한 모드를 저장하기 위해 임포트
 
 image = None
 font = None
+bgm = None
+
 menu_selection = 0  # 0: 1 vs 1,  1: AI Mode
 
 
@@ -12,6 +14,12 @@ def init():
     global image, font
     image = load_image('title.png')  # 배경 이미지 (원하는걸로 교체 가능)
     font = load_font('ENCR10B.TTF', 40)
+
+    # bgm
+    global bgm
+    bgm = load_wav('Sound/play_mode.wav')
+    bgm.set_volume(100)
+    bgm.play()
 
 
 def finish():
