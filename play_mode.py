@@ -30,12 +30,13 @@ result_font = None  # 결과 출력용 폰트
 def init():
     global p1, p2, ui, ai
     global round_num, p1_score, p2_score, game_phase, result_font
+    global round_start, phase_start_time
 
     # 게임 변수 초기화
     round_num = 1
     p1_score = 0
     p2_score = 0
-    game_phase = 'FIGHT'
+    game_phase = 'ROUND_START'
 
     # 폰트 로드 (결과창용 큰 폰트)
     result_font = load_font('ENCR10B.TTF', 60)
@@ -85,6 +86,14 @@ def init():
     ai = None
     if game_data.game_mode == 'AI':
         ai = AIController(p2, p1)
+
+    try:
+        round_start = load_wav('Sound/round_start.wav')
+        round_start.set_volume(64)
+        round_start.play()
+    except Exception:
+        round_start = None
+    phase_start_time = get_time()
 
 
 def finish():
