@@ -8,6 +8,7 @@ monk_image = None
 peasant_image = None
 font = None
 button_sound = None
+char_select = None
 
 # 선택 상태 변수
 step = 0  # 0: 1P 선택중, 1: 2P 선택중
@@ -69,6 +70,8 @@ def draw():
 def handle_events():
     global cursor, step
     global button_sound
+    global char_select
+
     events = get_events()
     for event in events:
         if event.type == SDL_QUIT:
@@ -93,6 +96,9 @@ def handle_events():
             # 선택 (스페이스바)
             elif event.key == SDLK_SPACE:
                 selected_char = 'Monk' if cursor == 0 else 'Peasant'
+                button_sound = load_wav('Sound/char_select.wav')
+                button_sound.set_volume(50)
+                button_sound.play()
 
                 if step == 0:  # 1P 선택 완료
                     game_data.p1_char = selected_char
