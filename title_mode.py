@@ -78,12 +78,12 @@ def handle_events():
             elif event.key == SDLK_SPACE:
                 if menu_selection == 0:
                     game_data.game_mode = 'PVP'
-                    select_mode_sound = load_wav('Sound/selectmode.wav')
+                    select_mode_sound = load_wav('Sound/select_mode.wav')
                     select_mode_sound.set_volume(50)
                     select_mode_sound.play()
                 else:
                     game_data.game_mode = 'AI'
-                    select_mode_sound = load_wav('Sound/selectmode.wav')
+                    select_mode_sound = load_wav('Sound/select_mode.wav')
                     select_mode_sound.set_volume(50)
                     select_mode_sound.play()
 
