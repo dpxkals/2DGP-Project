@@ -14,6 +14,8 @@ p2 = None
 ui = None
 ai = None
 
+round_start = None
+
 # 라운드 및 게임 상태 관리 변수
 round_num = 1  # 현재 라운드
 p1_score = 0  # 1P 승리 횟수
@@ -106,7 +108,6 @@ def update():
         check_attack(p1, p2)
         check_attack(p2, p1)
 
-        # 승패 체크 (HP가 0 이하가 되면 라운드 종료)
         if p1.hp <= 0:
             finish_round(winner='2P')
         elif p2.hp <= 0:
@@ -124,13 +125,33 @@ def update():
                 game_phase = 'GAME_OVER'
                 phase_start_time = get_time()
             else:
-                next_round()  # 다음 라운드 시작
+                # 바로 다음 라운드 준비(효과음 재생 및 잠깐 대기)로 전환
+                next_round()  # 이제 next_round가 ROUND_START로 전환하고 사운드를 재생함
+
+    # -------------------------------------------------------
+    # 2.5 라운드 시작 대기 (ROUND_START) — 효과음 재생 후 실제 리셋 및 FIGHT 시작
+    # -------------------------------------------------------
+    elif game_phase == 'ROUND_START':
+        game_world.update()
+        # 효과음 재생 후 대기 시간 (예: 1초)
+        if get_time() - phase_start_time > 1.0:
+            # 캐릭터 상태 리셋 (위치, HP 초기화)
+            reset_character(p1, 400, 300, 1)   # 1P 위치, 오른쪽 보기
+            reset_character(p2, 1500, 300, -1) # 2P 위치, 왼쪽 보기
+
+            # AI 상태 리셋 (누르고 있던 키 해제)
+            if ai:
+                ai.pressed_keys.clear()
+                ai.attack_cooldown = 0
+
+            # 실제 전투로 전환
+            game_phase = 'FIGHT'
+            phase_start_time = get_time()
 
     # -------------------------------------------------------
     # 3. 게임 완전 종료 (GAME_OVER)
     # -------------------------------------------------------
     elif game_phase == 'GAME_OVER':
-        # 4초 뒤 타이틀 화면으로 이동
         if get_time() - phase_start_time > 4.0:
             import title_mode
             game_framework.change_mode(title_mode)
@@ -150,19 +171,17 @@ def finish_round(winner):
 
 
 def next_round():
-    """다음 라운드 세팅 (위치, HP 초기화)"""
-    global round_num, game_phase
+    global round_num, game_phase, phase_start_time
+    global round_start
+
     round_num += 1
-    game_phase = 'FIGHT'
+    game_phase = 'ROUND_START'
+    phase_start_time = get_time()
 
-    # 캐릭터 상태 리셋
-    reset_character(p1, 400, 300, 1)  # 1P 위치, 오른쪽 보기
-    reset_character(p2, 1500, 300, -1)  # 2P 위치, 왼쪽 보기
-
-    # AI 상태 리셋 (누르고 있던 키 해제)
-    if ai:
-        ai.pressed_keys.clear()
-        ai.attack_cooldown = 0
+    # 라운드 시작 효과음 재생 (한 번만 재생)
+    round_start = load_wav('Sound/round_start.wav')
+    round_start.set_volume(50)
+    round_start.play()
 
 
 def reset_character(player, x, y, face):
