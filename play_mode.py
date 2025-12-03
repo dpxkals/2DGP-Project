@@ -94,13 +94,15 @@ def finish():
 
 
 def update():
-    global game_phase, phase_start_time, p1_score, p2_score, round_num
+    global game_phase, phase_start_time, p1_score, p2_score, round_num, round_start
+
+    # 애니메이션은 항상 작동 (대기 중에도 숨은 쉬어야 함)
+    game_world.update()
 
     # -------------------------------------------------------
     # 1. 전투 진행 중 (FIGHT)
     # -------------------------------------------------------
     if game_phase == 'FIGHT':
-        game_world.update()
         game_world.handle_collisions()
 
         if ai: ai.update()
@@ -117,39 +119,32 @@ def update():
     # 2. 라운드 종료 대기 (ROUND_OVER)
     # -------------------------------------------------------
     elif game_phase == 'ROUND_OVER':
-        game_world.update()
-        # 3초 동안 결과 보여주고 다음으로 넘어감
+        # 3초간 승리/패배 모션 보여줌
         if get_time() - phase_start_time > 3.0:
-            # 누군가 2승을 먼저 했는지 확인
             if p1_score >= 2 or p2_score >= 2:
                 game_phase = 'GAME_OVER'
                 phase_start_time = get_time()
             else:
-                # 바로 다음 라운드 준비(효과음 재생 및 잠깐 대기)로 전환
-                next_round()  # 이제 next_round가 ROUND_START로 전환하고 사운드를 재생함
+                next_round()  # 위치 리셋하고 ROUND_START로 이동
 
     # -------------------------------------------------------
-    # 2.5 라운드 시작 대기 (ROUND_START) — 효과음 재생 후 실제 리셋 및 FIGHT 시작
+    # 3. 라운드 시작 대기 (ROUND_START)
     # -------------------------------------------------------
     elif game_phase == 'ROUND_START':
-        game_world.update()
-        # 효과음 재생 후 대기 시간 (예: 1초)
-        if get_time() - phase_start_time > 1.0:
-            # 캐릭터 상태 리셋 (위치, HP 초기화)
-            reset_character(p1, 400, 300, 1)   # 1P 위치, 오른쪽 보기
-            reset_character(p2, 1500, 300, -1) # 2P 위치, 왼쪽 보기
+        # 캐릭터들은 이미 reset_character로 양쪽에 서 있는 상태입니다.
+        # "Round X... Fight!" 사운드가 끝날 때까지(약 2초) 대기합니다.
 
-            # AI 상태 리셋 (누르고 있던 키 해제)
-            if ai:
-                ai.pressed_keys.clear()
-                ai.attack_cooldown = 0
+        # 사운드 길이만큼 대기 (기본 2초로 설정)
+        wait_time = 2.0
 
-            # 실제 전투로 전환
+        if get_time() - phase_start_time > wait_time:
+            # 대기 시간이 끝나면 전투 시작!
             game_phase = 'FIGHT'
-            phase_start_time = get_time()
+
+            # (선택사항) 여기서 "Fight!" 효과음을 추가로 재생할 수도 있습니다.
 
     # -------------------------------------------------------
-    # 3. 게임 완전 종료 (GAME_OVER)
+    # 4. 게임 완전 종료 (GAME_OVER)
     # -------------------------------------------------------
     elif game_phase == 'GAME_OVER':
         if get_time() - phase_start_time > 4.0:
@@ -171,17 +166,32 @@ def finish_round(winner):
 
 
 def next_round():
-    global round_num, game_phase, phase_start_time
-    global round_start
+    global round_num, game_phase, phase_start_time, round_start
 
     round_num += 1
+
+    # 1. [핵심] 소리 재생 전에 캐릭터 위치와 상태를 먼저 리셋합니다.
+    # 그래야 "Round 2" 소리가 나올 때 캐릭터들이 양쪽에 서 있게 됩니다.
+    reset_character(p1, 400, 300, 1)   # 1P 위치 초기화
+    reset_character(p2, 1500, 300, -1) # 2P 위치 초기화
+
+    # AI 상태도 리셋
+    if ai:
+        ai.pressed_keys.clear()
+        ai.attack_cooldown = 0
+
+    # 2. 라운드 시작 사운드 재생
+    try:
+        # 매번 로드하는 것보다 init에서 로드해두는 게 좋지만, 여기선 기존 방식 유지
+        round_start = load_wav('Sound/round_start.wav')
+        round_start.set_volume(64)
+        round_start.play()
+    except Exception:
+        pass
+
+    # 3. 페이즈 전환 (대기 상태로)
     game_phase = 'ROUND_START'
     phase_start_time = get_time()
-
-    # 라운드 시작 효과음 재생 (한 번만 재생)
-    round_start = load_wav('Sound/round_start.wav')
-    round_start.set_volume(50)
-    round_start.play()
 
 
 def reset_character(player, x, y, face):
