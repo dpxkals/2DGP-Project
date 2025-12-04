@@ -20,7 +20,7 @@ def init():
     # bgm
     global bgm
     bgm = load_wav('Sound/play_mode.wav')
-    bgm.set_volume(100)
+    bgm.set_volume(30)
     bgm.play()
 
 
