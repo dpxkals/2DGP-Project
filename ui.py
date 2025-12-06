@@ -69,7 +69,7 @@ class UI:
                 self.big_font.draw(center_x - 150, center_y, "FIGHT!", (255, 50, 50))
 
         elif phase == 'ROUND_OVER':
-            self.mid_font.draw(center_x - 65, center_y + 100, "K.O.", (255, 0, 0))
+            self.mid_font.draw(center_x - 70, center_y + 100, "K.O.", (255, 0, 0))
             if p1.hp > 0:
                 self.font.draw(center_x - 120, center_y, "1P WINS THE ROUND", (255, 255, 255))
             else:
@@ -82,4 +82,7 @@ class UI:
             color = (255, 50, 50) if winner == "1P" else (50, 50, 255)
 
             self.mid_font.draw(center_x - 260, center_y, f"FINAL WINNER: {winner}", color)
-            self.font.draw(center_x - 150, center_y - 100, "Press ESC to Return", (200, 200, 200))
+
+            remaining_time = 4.0 - elapsed
+            sec = int(max(0, remaining_time))
+            self.font.draw(center_x - 150, center_y - 100, f" { sec } seconds to Return", (200, 200, 200))
