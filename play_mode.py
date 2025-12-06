@@ -169,7 +169,11 @@ def finish_round(winner):
 
     if winner == '1P':
         p1_score += 1
-    else:
+    elif winner == '2P':
+        p2_score += 1
+    else :
+        # 무승부 처리: 양쪽 점수 모두 증가
+        p1_score += 1
         p2_score += 1
 
 
