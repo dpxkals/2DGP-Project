@@ -28,12 +28,13 @@ result_font = None  # 결과 출력용 폰트
 
 fight_start_time = 0 # 전투 시작 시간 (타이머용)
 ROUND_TIME_LIMIT = 99.0 # 라운드 제한 시간 (초)
+fight_start_sound_played = False # 전투 시작 소리 재생 여부 체크용
 
 
 def init():
     global p1, p2, ui, ai
     global round_num, p1_score, p2_score, game_phase, result_font
-    global round_start, phase_start_time
+    global round_start, phase_start_time, fight_start_sound_played
 
     # 게임 변수 초기화
     round_num = 1
@@ -41,6 +42,7 @@ def init():
     p2_score = 0
     game_phase = 'ROUND_START'
     phase_start_time = get_time()
+    fight_start_sound_played = False  # 플래그 초기화
 
     # 폰트 로드 (결과창용 큰 폰트)
     result_font = load_font('ENCR10B.TTF', 60)
@@ -94,7 +96,7 @@ def init():
     try:
         round_start = load_wav('Sound/round_start.wav')
         round_start.set_volume(64)
-        round_start.play()
+        # round_start.play()
     except Exception:
         round_start = None
     phase_start_time = get_time()
@@ -107,7 +109,7 @@ def finish():
 
 
 def update():
-    global game_phase, phase_start_time, p1_score, p2_score, round_num, round_start, fight_start_time
+    global game_phase, phase_start_time, p1_score, p2_score, round_num, round_start, fight_start_time, fight_start_sound_played
 
     game_world.update()
 
@@ -130,10 +132,18 @@ def update():
 
     # --- 2. ROUND_START (대기) ---
     elif game_phase == 'ROUND_START':
-        wait_time = 2.0
-        if get_time() - phase_start_time > wait_time:
+        elapsed = get_time() - phase_start_time
+
+        # 3.5초가 되면 소리 재생 ("FIGHT!" 뜨는 타이밍)
+        if elapsed >= 3.0 and not fight_start_sound_played:
+            if round_start:
+                round_start.play()
+            fight_start_sound_played = True  # 한 번만 재생되게 잠금
+
+        # 4.5초가 되면 게임 시작 (FIGHT 문구를 1초간 보여줌)
+        if elapsed > 4.0:
             game_phase = 'FIGHT'
-            fight_start_time = get_time() # ★ 전투 시작 시간 기록! (타이머 시작)
+            fight_start_time = get_time()
 
     # --- 나머지 상태 (ROUND_OVER, GAME_OVER)는 기존 코드 유지 ---
     elif game_phase == 'ROUND_OVER':
@@ -164,12 +174,11 @@ def finish_round(winner):
 
 
 def next_round():
-    global round_num, game_phase, phase_start_time, round_start
+    global round_num, game_phase, phase_start_time, round_start, fight_start_sound_played
 
     round_num += 1
 
-    # 1. [핵심] 소리 재생 전에 캐릭터 위치와 상태를 먼저 리셋합니다.
-    # 그래야 "Round 2" 소리가 나올 때 캐릭터들이 양쪽에 서 있게 됩니다.
+    # 1. 소리 재생 전에 캐릭터 위치와 상태를 먼저 리셋합니다.
     reset_character(p1, 400, 300, 1)   # 1P 위치 초기화
     reset_character(p2, 1500, 300, -1) # 2P 위치 초기화
 
@@ -178,12 +187,13 @@ def next_round():
         ai.pressed_keys.clear()
         ai.attack_cooldown = 0
 
+    fight_start_sound_played = False  # 플래그 초기화
+
     # 2. 라운드 시작 사운드 재생
     try:
         # 매번 로드하는 것보다 init에서 로드해두는 게 좋지만, 여기선 기존 방식 유지
         round_start = load_wav('Sound/round_start.wav')
         round_start.set_volume(64)
-        round_start.play()
     except Exception:
         pass
 
