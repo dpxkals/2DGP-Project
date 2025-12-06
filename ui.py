@@ -78,13 +78,23 @@ class UI:
                 self.font.draw(center_x - 120, center_y, "2P WINS THE ROUND", (255, 255, 255))
             else:
                 # 체력이 같으면 무승부
-                self.mid_font.draw(center_x - 100, center_y, "DRAW", (200, 200, 200))
+                self.mid_font.draw(center_x - 80, center_y, "DRAW", (200, 200, 200))
 
         elif phase == 'GAME_OVER':
             self.big_font.draw(center_x - 250, center_y + 150, "GAME SET", (255, 255, 255))
-            winner = "1P" if p1_score > p2_score else "2P"
-            color = (255, 50, 50) if winner == "1P" else (50, 50, 255)
-            self.mid_font.draw(center_x - 260, center_y, f"FINAL WINNER: {winner}", color)
+            if p1_score > p2_score:
+                winner = "1P"
+            elif p1_score < p2_score:
+                winner = "2P"
+            else :
+                winner = "DRAW"
+            if winner == "1P" :
+                color = (255, 50, 50)
+            elif winner == "2P" :
+                color = (50, 50, 255)
+            else :
+                color = (50, 255, 50)
+            self.mid_font.draw(center_x - 300, center_y, f"FINAL WINNER: {winner}", color)
 
             remaining_time = 4.0 - elapsed
             sec = int(max(0, remaining_time))
