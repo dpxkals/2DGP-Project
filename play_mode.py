@@ -14,6 +14,9 @@ p2 = None
 ui = None
 ai = None
 
+win_sound = None
+lose_sound = None
+
 round_start = None
 
 # 라운드 및 게임 상태 관리 변수
@@ -35,6 +38,12 @@ def init():
     global p1, p2, ui, ai
     global round_num, p1_score, p2_score, game_phase, result_font
     global round_start, phase_start_time, fight_start_sound_played
+    global win_sound, lose_sound
+
+    win_sound = load_wav('Sound/win.wav')
+    win_sound.set_volume(32)
+    lose_sound = load_wav('Sound/lose.wav')
+    lose_sound.set_volume(32)
 
     # 게임 변수 초기화
     round_num = 1
@@ -110,6 +119,7 @@ def finish():
 
 def update():
     global game_phase, phase_start_time, p1_score, p2_score, round_num, round_start, fight_start_time, fight_start_sound_played
+    global win_sound, lose_sound
 
     game_world.update()
 
@@ -145,7 +155,7 @@ def update():
             game_phase = 'FIGHT'
             fight_start_time = get_time()
 
-    # --- 나머지 상태 (ROUND_OVER, GAME_OVER)는 기존 코드 유지 ---
+    # --- 3. ROUND_OVER (라운드 종료) ---
     elif game_phase == 'ROUND_OVER':
         if get_time() - phase_start_time > 3.0:
             if p1_score >= 2 or p2_score >= 2:
@@ -154,7 +164,23 @@ def update():
             else:
                 next_round()
 
+    # --- 4. GAME_OVER (최종 종료) ---
     elif game_phase == 'GAME_OVER':
+        is_p1_winner = (p1_score > p2_score)
+
+        # 3. 모드에 따른 소리 재생
+        if game_data.game_mode == 'PVP':
+            if p1_score == p2_score:
+                lose_sound.play()
+            else :
+                win_sound.play()
+
+        else:  # AI Mode
+            if is_p1_winner:
+                win_sound.play()
+            else:
+                lose_sound.play()
+
         if get_time() - phase_start_time > 4.0:
             import title_mode
             game_framework.change_mode(title_mode)
