@@ -35,11 +35,11 @@ class AIController:
         a_defend = Action('방어하기', self.do_defend)
         seq_defense = Sequence('위협 시 방어', c_threat, a_defend)
 
-        # 2. 후퇴 (Hit & Run)
-        # 조건: 공격 쿨타임 중이고(무방비), 적이 가까우면 -> 적 반대로 대쉬
-        c_retreat = Condition('후퇴 필요한가?', self.need_to_retreat, 100)
-        a_retreat = Action('방향잡고 후퇴', self.do_dash_retreat)
-        seq_retreat = Sequence('치고 빠지기', c_retreat, a_retreat)
+        # # 2. 후퇴 (Hit & Run)
+        # # 조건: 공격 쿨타임 중이고(무방비), 적이 가까우면 -> 적 반대로 대쉬
+        # c_retreat = Condition('후퇴 필요한가?', self.need_to_retreat, 100)
+        # a_retreat = Action('방향잡고 후퇴', self.do_dash_retreat)
+        # seq_retreat = Sequence('치고 빠지기', c_retreat, a_retreat)
 
         # 3. 대쉬 추격 (Gap Closing)
         c_very_far = Condition('너무 먼가?', self.is_very_far, 300)
@@ -56,7 +56,7 @@ class AIController:
         a_idle = Action('대기', self.do_idle)
 
         # 우선순위: 방어 > 후퇴(New) > 급습 > 추적 > 공격 > 대기
-        root = Selector('AI 판단', seq_defense, seq_retreat, seq_dash_chase, seq_chase, a_attack, a_idle)
+        root = Selector('AI 판단', seq_defense, seq_dash_chase, seq_chase, a_attack, a_idle)
         self.bt = BehaviorTree(root)
 
     # --- 조건 함수 ---
