@@ -26,6 +26,9 @@ game_phase = 'FIGHT'
 phase_start_time = 0  # 페이즈 전환 시간 기록용
 result_font = None  # 결과 출력용 폰트
 
+fight_start_time = 0 # 전투 시작 시간 (타이머용)
+ROUND_TIME_LIMIT = 99.0 # 라운드 제한 시간 (초)
+
 
 def init():
     global p1, p2, ui, ai
@@ -37,6 +40,7 @@ def init():
     p1_score = 0
     p2_score = 0
     game_phase = 'ROUND_START'
+    phase_start_time = get_time()
 
     # 폰트 로드 (결과창용 큰 폰트)
     result_font = load_font('ENCR10B.TTF', 60)
@@ -103,58 +107,43 @@ def finish():
 
 
 def update():
-    global game_phase, phase_start_time, p1_score, p2_score, round_num, round_start
+    global game_phase, phase_start_time, p1_score, p2_score, round_num, round_start, fight_start_time
 
-    # 애니메이션은 항상 작동 (대기 중에도 숨은 쉬어야 함)
     game_world.update()
 
-    # -------------------------------------------------------
-    # 1. 전투 진행 중 (FIGHT)
-    # -------------------------------------------------------
+    # --- 1. FIGHT (전투 중) ---
     if game_phase == 'FIGHT':
         game_world.handle_collisions()
-
         if ai: ai.update()
-
         check_attack(p1, p2)
         check_attack(p2, p1)
 
-        if p1.hp <= 0:
-            finish_round(winner='2P')
-        elif p2.hp <= 0:
-            finish_round(winner='1P')
+        # [타이머 체크] 시간이 다 되면 체력 많은 쪽 승리
+        if get_time() - fight_start_time > ROUND_TIME_LIMIT:
+            if p1.hp > p2.hp: finish_round('1P')
+            elif p2.hp > p1.hp: finish_round('2P')
+            else: finish_round('DRAW') # 무승부면 일단 2P 승 등으로 처리
 
-    # -------------------------------------------------------
-    # 2. 라운드 종료 대기 (ROUND_OVER)
-    # -------------------------------------------------------
+        # [HP 체크]
+        if p1.hp <= 0: finish_round('2P')
+        elif p2.hp <= 0: finish_round('1P')
+
+    # --- 2. ROUND_START (대기) ---
+    elif game_phase == 'ROUND_START':
+        wait_time = 2.0
+        if get_time() - phase_start_time > wait_time:
+            game_phase = 'FIGHT'
+            fight_start_time = get_time() # ★ 전투 시작 시간 기록! (타이머 시작)
+
+    # --- 나머지 상태 (ROUND_OVER, GAME_OVER)는 기존 코드 유지 ---
     elif game_phase == 'ROUND_OVER':
-        # 3초간 승리/패배 모션 보여줌
         if get_time() - phase_start_time > 3.0:
             if p1_score >= 2 or p2_score >= 2:
                 game_phase = 'GAME_OVER'
                 phase_start_time = get_time()
             else:
-                next_round()  # 위치 리셋하고 ROUND_START로 이동
+                next_round()
 
-    # -------------------------------------------------------
-    # 3. 라운드 시작 대기 (ROUND_START)
-    # -------------------------------------------------------
-    elif game_phase == 'ROUND_START':
-        # 캐릭터들은 이미 reset_character로 양쪽에 서 있는 상태입니다.
-        # "Round X... Fight!" 사운드가 끝날 때까지(약 2초) 대기합니다.
-
-        # 사운드 길이만큼 대기 (기본 2초로 설정)
-        wait_time = 2.0
-
-        if get_time() - phase_start_time > wait_time:
-            # 대기 시간이 끝나면 전투 시작!
-            game_phase = 'FIGHT'
-
-            # (선택사항) 여기서 "Fight!" 효과음을 추가로 재생할 수도 있습니다.
-
-    # -------------------------------------------------------
-    # 4. 게임 완전 종료 (GAME_OVER)
-    # -------------------------------------------------------
     elif game_phase == 'GAME_OVER':
         if get_time() - phase_start_time > 4.0:
             import title_mode
@@ -239,28 +228,19 @@ def collide(a, b):
 def draw():
     clear_canvas()
     game_world.render()
-    ui.draw(p1, p2)
 
-    # --- UI 추가 표시 (라운드 및 스코어) ---
-    # 중앙 상단에 라운드와 점수 표시
-    ui.font.draw(880, 1000, f"ROUND {round_num}", (255, 255, 0))
-    ui.font.draw(880, 950, f"{p1_score}  :  {p2_score}", (255, 255, 255))
+    # [타이머 시간 계산]
+    if game_phase == 'FIGHT':
+        # 남은 시간 = 제한시간 - 경과시간
+        current_fight_time = max(0, ROUND_TIME_LIMIT - (get_time() - fight_start_time))
+    elif game_phase == 'ROUND_START':
+        current_fight_time = ROUND_TIME_LIMIT  # 시작 전엔 99초로 표시
+    else:
+        current_fight_time = 0  # 끝났으면 0
 
-    # --- 상태별 텍스트 표시 ---
-    if game_phase == 'ROUND_OVER':
-        # 라운드 승자 표시
-        if p1.hp > 0:
-            result_font.draw(800, 600, "1P WIN!", (255, 0, 0))
-        else:
-            result_font.draw(800, 600, "2P WIN!", (0, 0, 255))
-
-    elif game_phase == 'GAME_OVER':
-        # 최종 우승자 표시
-        result_font.draw(750, 700, "GAME SET", (255, 255, 255))
-        if p1_score > p2_score:
-            result_font.draw(600, 500, "FINAL WINNER: 1P", (255, 0, 0))
-        else:
-            result_font.draw(600, 500, "FINAL WINNER: 2P", (0, 0, 255))
+    # UI 그리기 (모든 정보 전달)
+    # 순서: p1, p2, 1P점수, 2P점수, 라운드수, 현재상태, 상태시작시간, 남은전투시간
+    ui.draw(p1, p2, p1_score, p2_score, round_num, game_phase, phase_start_time, current_fight_time)
 
     update_canvas()
 
