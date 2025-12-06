@@ -115,8 +115,7 @@ class Dash(State):
         self.entity.dash_sound.play()
 
     def do(self):
-        self.entity.current_frame = (
-                                                self.entity.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.entity.frame
+        self.entity.current_frame = (self.entity.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.entity.frame
         self.entity.x += self.entity.dir * 500 * game_framework.frame_time  # 빠른 속도
         self.entity.clamp_position()
 
