@@ -1,6 +1,7 @@
 from pico2d import *
 import game_framework
 import select_mode  # 캐릭터 선택 모드로 이동하기 위해 임포트
+import control_mode
 import game_data  # 선택한 모드를 저장하기 위해 임포트
 
 image = None
@@ -23,6 +24,10 @@ def init():
     bgm.set_volume(50)
     bgm.play()
 
+    global select_mode_sound
+    select_mode_sound = load_wav('Sound/select_mode.wav')
+    select_mode_sound.set_volume(50)
+
 
 def finish():
     global image, font
@@ -41,11 +46,25 @@ def draw():
     # 메뉴 텍스트 그리기
     # 선택된 항목은 빨간색, 아닌건 검은색(혹은 흰색)
     if menu_selection == 0:
-        font.draw(800, 400, '> 1 vs 1 (PVP) <', (255, 0, 0))
-        font.draw(850, 300, '  AI Mode  ', (255, 255, 255))
-    else:
-        font.draw(800, 400, '  1 vs 1 (PVP)  ', (255, 255, 255))
-        font.draw(850, 300, '> AI Mode <', (255, 0, 0))
+        font.draw(800, 500, '> 1 vs 1 (PVP) <', (255, 0, 0))
+        font.draw(850, 400, '  AI Mode  ', (255, 255, 255))
+        font.draw(850, 300, '  Control  ', (255, 255, 255))
+        font.draw(880, 200, '  EXIT  ', (255, 255, 255))
+    elif menu_selection == 1:
+        font.draw(800, 500, '  1 vs 1 (PVP)  ', (255, 255, 255))
+        font.draw(850, 400, '> AI Mode <', (255, 0, 0))
+        font.draw(850, 300, '  Control  ', (255, 255, 255))
+        font.draw(880, 200, '  EXIT  ', (255, 255, 255))
+    elif menu_selection == 2:
+        font.draw(800, 500, '  1 vs 1 (PVP)  ', (255, 255, 255))
+        font.draw(850, 400, '  AI Mode  ', (255, 255, 255))
+        font.draw(850, 300, '> Control <', (255, 0, 0))
+        font.draw(880, 200, '  EXIT  ', (255, 255, 255))
+    elif menu_selection == 3:
+        font.draw(800, 500, '  1 vs 1 (PVP)  ', (255, 255, 255))
+        font.draw(850, 400, '  AI Mode  ', (255, 255, 255))
+        font.draw(850, 300, '  Control  ', (255, 255, 255))
+        font.draw(880, 200, '> EXIT <', (255, 0, 0))
 
     update_canvas()
 
@@ -64,12 +83,14 @@ def handle_events():
 
             # 메뉴 이동 (위/아래)
             elif event.key == SDLK_UP:
-                menu_selection = 0
+                menu_selection -= 1
+                menu_selection = max(menu_selection, 0)
                 button_sound = load_wav('Sound/button.wav')
                 button_sound.set_volume(50)
                 button_sound.play()
             elif event.key == SDLK_DOWN:
-                menu_selection = 1
+                menu_selection += 1
+                menu_selection = min(menu_selection, 3)
                 button_sound = load_wav('Sound/button.wav')
                 button_sound.set_volume(50)
                 button_sound.play()
@@ -78,14 +99,14 @@ def handle_events():
             elif event.key == SDLK_SPACE:
                 if menu_selection == 0:
                     game_data.game_mode = 'PVP'
-                    select_mode_sound = load_wav('Sound/select_mode.wav')
-                    select_mode_sound.set_volume(50)
                     select_mode_sound.play()
-                else:
+                    game_framework.change_mode(select_mode)
+                elif menu_selection == 1:
                     game_data.game_mode = 'AI'
-                    select_mode_sound = load_wav('Sound/select_mode.wav')
-                    select_mode_sound.set_volume(50)
                     select_mode_sound.play()
-
-                # 캐릭터 선택 모드로 이동!
-                game_framework.change_mode(select_mode)
+                    game_framework.change_mode(select_mode)
+                elif menu_selection == 2:
+                    select_mode_sound.play()
+                    game_framework.change_mode(control_mode)
+                elif menu_selection == 3:
+                    game_framework.quit()
