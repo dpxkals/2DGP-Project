@@ -111,6 +111,10 @@ class Hurt(State):
         self.entity.frame = self.entity.frame_hurt
         self.entity.current_frame = 0
         self.entity.is_hurt = True
+
+        if hasattr(self.entity, 'hit_sound'):
+            self.entity.hit_sound.play()
+
     def exit(self, e):
         self.entity.is_hurt = False
     def do(self):
@@ -123,5 +127,9 @@ class Dead(State):
         self.entity.current_image = self.entity.dead_image
         self.entity.frame = self.entity.frame_dead
         self.entity.current_frame = 0
+
+        if hasattr(self.entity, 'death_sound'):
+            self.entity.death_sound.play()
+
     def do(self):
         self.entity.current_frame = min(self.entity.current_frame + FRAMES_PER_SECOND * game_framework.frame_time, self.entity.frame - 1)

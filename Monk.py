@@ -38,6 +38,8 @@ class Attack1(State):
         self.entity.current_frame = 0
         self.entity.attack_power = 10
 
+        self.entity.atk1_sound.play()
+
     def do(self):
         self.entity.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
         if self.entity.current_frame >= self.entity.frame - 1:
@@ -50,6 +52,8 @@ class Attack2(State):
         self.entity.frame = self.entity.frame_attack2
         self.entity.current_frame = 0
         self.entity.attack_power = 20
+
+        self.entity.atk2_sound.play()
 
     def do(self):
         self.entity.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
@@ -107,6 +111,8 @@ class Dash(State):
         if self.entity.dir == 0: self.entity.dir = self.entity.face_dir
 
         self.entity.face_dir = self.entity.dir
+
+        self.entity.dash_sound.play()
 
     def do(self):
         self.entity.current_frame = (
@@ -192,11 +198,12 @@ class Monk(Character):
             # 3. 0.2초 이내라면 '패링 성공' (데미지 0)
             if timing < 0.2:
                 print("PARRY SUCCESS!")
-                # 여기에 팅~ 하는 효과음 추가 할지도
+                self.defense_sound.play()
                 return  # 데미지 적용 안 하고 함수 종료
 
             # 4. 타이밍 늦었으면 그냥 일반 방어 (데미지 반감)
             print("Guard (Damage Reduced)")
+            self.defense_sound.play()
             amount = amount * self.defense_factor
 
         # --- 아래는 기존 피격 로직 ---
