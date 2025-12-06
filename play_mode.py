@@ -244,7 +244,7 @@ def draw():
     # --- UI 추가 표시 (라운드 및 스코어) ---
     # 중앙 상단에 라운드와 점수 표시
     ui.font.draw(880, 1000, f"ROUND {round_num}", (255, 255, 0))
-    ui.font.draw(850, 950, f"{p1_score}  :  {p2_score}", (255, 255, 255))
+    ui.font.draw(880, 950, f"{p1_score}  :  {p2_score}", (255, 255, 255))
 
     # --- 상태별 텍스트 표시 ---
     if game_phase == 'ROUND_OVER':
