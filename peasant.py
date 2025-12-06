@@ -1,5 +1,5 @@
 from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q, SDLK_LEFT, \
-    SDLK_RIGHT, SDLK_SLASH, SDLK_RSHIFT, SDLK_PERIOD, SDLK_RCTRL, get_time
+    SDLK_RIGHT, SDLK_SLASH, SDLK_RSHIFT, SDLK_PERIOD, SDLK_RCTRL, get_time,load_wav
 from character import Character, State, Idle, Walk, Hurt, Dead, FRAMES_PER_SECOND
 import game_framework
 from state_machine import StateMachine
@@ -14,6 +14,8 @@ class Attack1(State):
         self.entity.current_frame = 0
         self.entity.attack_power = 10  # 공격력 설정
 
+        self.entity.atk1_sound.play()
+
     def do(self):
         self.entity.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
         if self.entity.current_frame >= self.entity.frame - 1:
@@ -26,6 +28,8 @@ class Attack2(State):
         self.entity.frame = self.entity.frame_attack2
         self.entity.current_frame = 0
         self.entity.attack_power = 20  # 강공격
+
+        self.entity.atk2_sound.play()
 
     def do(self):
         self.entity.current_frame += FRAMES_PER_SECOND * game_framework.frame_time
@@ -95,6 +99,8 @@ class Dash(State):
 
         self.entity.face_dir = self.entity.dir
 
+        self.entity.dash_sound.play()
+
     def do(self):
         self.entity.current_frame = (
                                                 self.entity.current_frame + FRAMES_PER_SECOND * game_framework.frame_time) % self.entity.frame
@@ -132,9 +138,21 @@ class Peasant(Character):
     def __init__(self, key_map=None):
         super().__init__()
         self.load_images()
+        self.load_sound()
         self.setup_keys(key_map)
         self.build_state_machine()
         self.defense_factor = 1.0  # 기본은 데미지 100% 받음
+
+    def load_sound(self):
+        self.atk1_sound = load_wav('Sound/atk1.wav')
+        self.atk2_sound = load_wav('Sound/atk2.wav')
+
+        self.hit_sound = load_wav('Sound/c2_hit.wav')
+
+        self.death_sound = load_wav('Sound/c2_death.wav')
+        self.defense_sound = load_wav('Sound/defense.wav')
+
+        self.dash_sound = load_wav('Sound/dash.wav')
 
     def load_images(self):
         self.idle_image = load_image('Peasant_idle.png')
@@ -190,10 +208,12 @@ class Peasant(Character):
             # 3. 0.2초 이내면 패링 성공 (데미지 0)
             if timing < 0.2:
                 print("★ PEASANT PARRY SUCCESS! ★")
+                self.defense_sound.play()
                 return
 
             # 4. 늦었으면 일반 방어
             print("Peasant Guard")
+            self.defense_sound.play()
             amount = amount * self.defense_factor
 
         # 원래 데미지 처리 로직 실행
