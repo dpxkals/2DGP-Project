@@ -1,4 +1,4 @@
-from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q, get_time
+from pico2d import load_image, SDL_KEYDOWN, SDL_KEYUP, SDLK_a, SDLK_d, SDLK_j, SDLK_LCTRL, SDLK_e, SDLK_q, get_time, load_wav
 from character import Character, State, FRAMES_PER_SECOND
 import game_framework
 from state_machine import StateMachine
@@ -123,9 +123,21 @@ class Monk(Character):
     def __init__(self, key_map=None):
         super().__init__()
         self.load_images()
+        self.load_sound()
         self.setup_keys(key_map)
         self.build_state_machine()
         self.defense_factor = 1.0
+
+    def load_sound(self):
+        self.atk1_sound = load_wav('Sound/atk1.wav')
+        self.atk2_sound = load_wav('Sound/atk2.wav')
+
+        self.hit_sound = load_wav('Sound/c1_hit.wav')
+
+        self.death_sound = load_wav('Sound/c1_death.wav')
+        self.defense_sound = load_wav('Sound/defense.wav')
+
+        self.dash_sound = load_wav('Sound/dash.wav')
 
     def load_images(self):
         self.idle_image = load_image('Monk_idle.png')
