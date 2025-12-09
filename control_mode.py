@@ -24,8 +24,8 @@ def draw():
     clear_canvas()
     image.draw(960, 540, 1920, 1080)
 
-    image_p1.draw(500, 500)
-    image_p2.draw(1320, 500)
+    image_p1.draw(500, 500, 700, 500)
+    image_p2.draw(1320, 500, 700, 500)
     update_canvas()
 
 def handle_events():
